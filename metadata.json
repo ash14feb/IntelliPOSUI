@@ -1,0 +1,7 @@
+{
+  "name": "Remix: DREAMCUBE POS",
+  "description": "PWA for printing receipts to 58mm Bluetooth thermal printers using Web Bluetooth API.",
+  "requestFramePermissions": [
+    "bluetooth"
+  ]
+}
