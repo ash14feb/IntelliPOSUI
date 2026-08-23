@@ -15,7 +15,7 @@ import {
 } from '../types';
 
 const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
-const API_BASE_URL = (env?.VITE_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const API_BASE_URL = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
 const AUTH_STORAGE_KEY = 'scannex-pos-auth';
 
 let authToken: string | null = null;
