@@ -120,7 +120,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
 
     const mustPrint = settings.orderAfterBill;
 
-    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint && !mustPrint) {
+    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint) {
       setShowBluetoothModal(true);
       return;
     }
@@ -529,7 +529,9 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
             </div>
             <h3 className="text-2xl font-black text-slate-900">Bluetooth Printer Disconnected</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              Your Bluetooth printer may be disconnected. Connect to the printer now, then press the bill button again to print.
+              {settings.orderAfterBill
+                ? 'Print Bill Before Order is enabled. Please connect your Bluetooth printer first to print the bill and accept the order.'
+                : 'Your Bluetooth printer may be disconnected. Connect to the printer now, then press the bill button again to print.'}
             </p>
             <div className="mt-6 flex gap-3">
               <button
