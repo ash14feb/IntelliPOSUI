@@ -1,13 +1,13 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, MapPinned, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, LoaderCircle, MapPinned, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { AuthSession } from '../types';
-import { login, registerTenant } from '../lib/api';
+import { forgotPassword, login, registerTenant, resetPassword } from '../lib/api';
 
 interface AuthViewProps {
   onAuthenticated: (session: AuthSession) => void;
 }
 
-type AuthMode = 'login' | 'register';
+type AuthMode = 'login' | 'register' | 'forgotPassword' | 'resetPassword';
 
 const quickHighlights = [
   'No App Installation Required',
@@ -18,64 +18,54 @@ const quickHighlights = [
   'Free 7-Day Trial'
 ];
 
-const sliderCards = [
-  {
-    title: 'Smart Billing For Fast Counters',
-    text: 'Create bills in seconds with clean item selection, payment modes, receipt printing, and customer capture.',
-    accent: 'from-sky-400 to-cyan-300'
-  },
-  {
-    title: 'Business Reports From Anywhere',
-    text: 'Track sales, customers, and performance in real time from desktop, tablet, or mobile.',
-    accent: 'from-fuchsia-400 to-rose-300'
-  },
-  {
-    title: 'Cloud Access With Zero Hassle',
-    text: 'Login from anywhere and keep your business running without installing software on every machine.',
-    accent: 'from-emerald-400 to-lime-300'
-  }
-];
-
 const features = [
   {
-    title: 'Smart Billing System',
-    description: 'Fast and intuitive billing designed for speed and accuracy. Perfect for retail, restaurants, and small businesses.',
-    icon: CreditCard
+    title: 'Smart Billing',
+    description: 'Fast, intuitive billing for retail, restaurants, and small businesses.',
+    icon: CreditCard,
+    color: 'bg-blue-50 text-blue-600'
   },
   {
-    title: 'Cloud-Based Access',
-    description: 'Access your business anytime, anywhere. Just login and start working with no dependency on a single system.',
-    icon: Cloud
+    title: 'Cloud Access',
+    description: 'Login from anywhere. No dependency on a single machine.',
+    icon: Cloud,
+    color: 'bg-sky-50 text-sky-600'
   },
   {
-    title: 'Reports On The Go',
-    description: 'Track sales, profits, and performance in real time with powerful reports accessible from any device.',
-    icon: BarChart3
+    title: 'Live Reports',
+    description: 'Track sales, profits, and performance in real time from any device.',
+    icon: BarChart3,
+    color: 'bg-emerald-50 text-emerald-600'
   },
   {
-    title: 'Bluetooth Printer Support',
-    description: 'Print bills instantly using supported Bluetooth thermal printers with simple setup.',
-    icon: Bluetooth
+    title: 'Bluetooth Printing',
+    description: 'Print receipts instantly via Bluetooth thermal printers.',
+    icon: Bluetooth,
+    color: 'bg-violet-50 text-violet-600'
   },
   {
     title: 'KOT Support',
-    description: 'Ideal for restaurants. Send orders directly to kitchen printers for faster service.',
-    icon: Sparkles
+    description: 'Send orders directly to kitchen printers for faster service.',
+    icon: Sparkles,
+    color: 'bg-amber-50 text-amber-600'
   },
   {
     title: 'Unlimited Users',
-    description: 'Add as many staff members as you want with no extra restrictions.',
-    icon: Users
+    description: 'Add as many staff members as you need with no restrictions.',
+    icon: Users,
+    color: 'bg-rose-50 text-rose-600'
   },
   {
-    title: 'GPS-Based Staff Attendance',
-    description: 'Track staff attendance with GPS location accuracy for better workforce management.',
-    icon: MapPinned
+    title: 'GPS Attendance',
+    description: 'Track staff attendance with GPS location accuracy.',
+    icon: MapPinned,
+    color: 'bg-teal-50 text-teal-600'
   },
   {
     title: 'Secure & Reliable',
-    description: 'Your data stays securely stored in the cloud with strong protection and dependable backups.',
-    icon: ShieldCheck
+    description: 'Your data stays safe in the cloud with strong protection.',
+    icon: ShieldCheck,
+    color: 'bg-indigo-50 text-indigo-600'
   }
 ];
 
@@ -88,22 +78,31 @@ const reasons = [
 ];
 
 export default function AuthView({ onAuthenticated }: AuthViewProps) {
-  const [mode, setMode] = useState<AuthMode>('register');
-  const [sliderIndex, setSliderIndex] = useState(0);
+  const [mode, setMode] = useState<AuthMode>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token') ? 'resetPassword' : 'register';
+  });
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', businessName: '' });
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetToken] = useState(() => new URLSearchParams(window.location.search).get('token') || '');
+  const [resetForm, setResetForm] = useState({ newPassword: '', confirmPassword: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const ctaLabel = useMemo(() => (mode === 'register' ? 'Start Free Demo (7 Days)' : 'Login'), [mode]);
+  const ctaLabel = useMemo(() => {
+    if (mode === 'register') return 'Start Free Demo (7 Days)';
+    if (mode === 'forgotPassword') return 'Reset Password';
+    if (mode === 'resetPassword') return 'Set New Password';
+    return 'Login';
+  }, [mode]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setSliderIndex((current) => (current + 1) % sliderCards.length);
-    }, 3500);
-
-    return () => window.clearInterval(timer);
+    // Clean the URL after reading the token
+    if (window.location.search) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   const switchMode = (nextMode: AuthMode) => {
@@ -147,20 +146,72 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
     }
   };
 
+  const handleForgotSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const message = await forgotPassword({ email: forgotEmail });
+      setSuccessMessage(message);
+      setForgotEmail('');
+    } catch (err: any) {
+      setError(err?.message || 'Unable to process request right now.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResetSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    if (resetForm.newPassword !== resetForm.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    if (resetForm.newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const message = await resetPassword({ token: resetToken, newPassword: resetForm.newPassword });
+      setSuccessMessage(message);
+      setResetForm({ newPassword: '', confirmPassword: '' });
+      setTimeout(() => switchMode('login'), 2000);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to reset password right now.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#fffdf8_0%,#eef6ff_42%,#fef3f2_100%)] text-slate-900">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_25%),radial-gradient(circle_at_80%_10%,_rgba(244,114,182,0.18),_transparent_22%),radial-gradient(circle_at_50%_60%,_rgba(250,204,21,0.12),_transparent_28%)]" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="smoke-cloud smoke-cloud-1" style={{ top: '-10%', left: '-5%' }} />
+        <div className="smoke-cloud smoke-cloud-2" style={{ top: '20%', right: '-8%' }} />
+        <div className="smoke-cloud smoke-cloud-3" style={{ top: '55%', left: '10%' }} />
+        <div className="smoke-cloud smoke-cloud-4" style={{ top: '75%', right: '15%' }} />
+        <div className="smoke-cloud smoke-cloud-5" style={{ top: '40%', left: '45%' }} />
+      </div>
       <div className="relative">
         <header className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 lg:px-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">Scanex POS</p>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-blue-600">Intelli Billing Software</p>
             <p className="mt-1 text-sm text-slate-600">Cloud billing made simple for businesses everywhere</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => switchMode('register')}
-              className="rounded-full bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-600"
+              className="rounded-full bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-600"
             >
               Start Free Demo
             </button>
@@ -176,12 +227,12 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
 
         <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:pb-20 lg:pt-10">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-2 text-sm font-medium text-sky-700 shadow-sm backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm backdrop-blur">
               <Sparkles className="h-4 w-4" />
               Smart, Simple and Powerful Billing
             </div>
             <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Scanex POS Smart, Simple and Powerful Billing Solution
+              Intelli Billing Software Smart, Simple and Powerful Billing Solution
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
               Run your business from anywhere with a cloud-based POS. No installation. No hassle.
@@ -190,7 +241,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
               <button
                 type="button"
                 onClick={() => switchMode('register')}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_40px_rgba(56,189,248,0.28)] transition hover:-translate-y-[1px] hover:bg-sky-600"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition hover:-translate-y-[1px] hover:bg-blue-600"
               >
                 Start Free Demo (7 Days)
                 <ArrowRight className="h-5 w-5" />
@@ -211,99 +262,42 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                 </div>
               ))}
             </div>
-
-            <div className="mt-10 rounded-[2rem] border border-white/80 bg-white/75 p-6 shadow-[0_24px_80px_rgba(148,163,184,0.18)] backdrop-blur">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Product Slider</p>
-                  <h2 className="mt-2 text-2xl font-bold text-slate-900">{sliderCards[sliderIndex].title}</h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{sliderCards[sliderIndex].text}</p>
-                </div>
-                <div className={`hidden h-20 w-20 rounded-3xl bg-gradient-to-br ${sliderCards[sliderIndex].accent} shadow-lg sm:block`} />
-              </div>
-
-              <div className="mt-6 overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_35%,#fdf2f8_100%)] p-5">
-                <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-                  <div className="rounded-3xl border border-sky-100 bg-white p-5 shadow-sm">
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      {[
-                        { label: 'Sales', value: 'Rs.12,480', tone: 'bg-sky-50 text-sky-700' },
-                        { label: 'Bills', value: '146', tone: 'bg-emerald-50 text-emerald-700' },
-                        { label: 'Customers', value: '89', tone: 'bg-rose-50 text-rose-700' }
-                      ].map((card) => (
-                        <div key={card.label} className={`rounded-2xl ${card.tone} p-4`}>
-                          <p className="text-sm font-medium">{card.label}</p>
-                          <p className="mt-2 text-2xl font-black">{card.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-5 h-40 rounded-3xl bg-[linear-gradient(180deg,#ffffff_0%,#e0f2fe_100%)] p-5">
-                      <div className="flex h-full items-end gap-3">
-                        {[52, 68, 64, 90, 76, 104, 92, 118, 108, 126].map((height, index) => (
-                          <div
-                            key={index}
-                            className={`flex-1 rounded-t-2xl bg-gradient-to-t ${sliderCards[sliderIndex].accent} opacity-90 transition-all duration-500`}
-                            style={{ height: `${height}px` }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="rounded-3xl border border-slate-100 bg-amber-50 p-5">
-                      <p className="text-sm text-amber-700">Simple onboarding</p>
-                      <p className="mt-2 text-2xl font-black text-slate-900">Register and get started fast</p>
-                    </div>
-                    <div className="rounded-3xl border border-slate-100 bg-fuchsia-50 p-5">
-                      <p className="text-sm text-fuchsia-700">Flexible access</p>
-                      <p className="mt-2 text-2xl font-black text-slate-900">Use it on desktop, tablet, or mobile</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center gap-2">
-                {sliderCards.map((_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setSliderIndex(index)}
-                    className={`h-2.5 rounded-full transition-all ${sliderIndex === index ? 'w-10 bg-sky-500' : 'w-2.5 bg-slate-300'}`}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
 
           <section className="relative">
             <div className="rounded-[2rem] border border-white/80 bg-white/80 p-6 shadow-[0_24px_80px_rgba(148,163,184,0.22)] backdrop-blur lg:sticky lg:top-8 lg:p-8">
-              <div className="flex rounded-2xl bg-slate-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => switchMode('register')}
-                  className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition ${mode === 'register' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-600'}`}
-                >
-                  Start Free Demo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('login')}
-                  className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition ${mode === 'login' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-600'}`}
-                >
-                  Login
-                </button>
-              </div>
+              {(mode === 'login' || mode === 'register') && (
+                <div className="flex rounded-2xl bg-slate-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('register')}
+                    className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition ${mode === 'register' ? 'bg-blue-500 text-white shadow-lg' : 'text-slate-600'}`}
+                  >
+                    Start Free Demo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition ${mode === 'login' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-600'}`}
+                  >
+                    Login
+                  </button>
+                </div>
+              )}
 
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-sky-600">{ctaLabel}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-blue-600">{ctaLabel}</p>
                 <h2 className="mt-3 text-3xl font-black text-slate-900">
-                  {mode === 'register' ? 'Start your free 7-day trial' : 'Access your Scanex POS workspace'}
+                  {mode === 'register' && 'Start your free 7-day trial'}
+                  {mode === 'login' && 'Access your Intelli Billing workspace'}
+                  {mode === 'forgotPassword' && 'Reset your password'}
+                  {mode === 'resetPassword' && 'Set a new password'}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {mode === 'register'
-                    ? 'Create your business account now. Admin credentials will be sent to the registered email automatically.'
-                    : 'Login with the admin username and password sent to your email after registration.'}
+                  {mode === 'register' && 'Create your business account now. Admin credentials will be sent to the registered email automatically.'}
+                  {mode === 'login' && 'Login with the admin username and password sent to your email after registration.'}
+                  {mode === 'forgotPassword' && 'Enter your registered email address and we will send you a link to reset your password.'}
+                  {mode === 'resetPassword' && 'Enter your new password below. Make sure it is at least 6 characters long.'}
                 </p>
               </div>
 
@@ -319,7 +313,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                 </div>
               )}
 
-              {mode === 'login' ? (
+              {mode === 'login' && (
                 <form className="mt-6 space-y-5" onSubmit={handleLoginSubmit}>
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">Admin Username</label>
@@ -327,7 +321,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                       type="text"
                       value={loginForm.username}
                       onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                       placeholder="Enter admin username"
                       required
                     />
@@ -338,20 +332,95 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                       type="password"
                       value={loginForm.password}
                       onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                       placeholder="Enter password"
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => switchMode('forgotPassword')}
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Signing In...</> : 'Login'}
+                  </button>
+                </form>
+              )}
+
+              {mode === 'forgotPassword' && (
+                <form className="mt-6 space-y-5" onSubmit={handleForgotSubmit}>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Email Address</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(event) => setForgotEmail(event.target.value)}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter your registered email"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
                   >
-                    {isSubmitting ? 'Signing In...' : 'Login'}
+                    {isSubmitting ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Sending...</> : 'Send Reset Link'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className="w-full text-sm font-semibold text-slate-600 hover:text-slate-800 transition"
+                  >
+                    Back to Login
                   </button>
                 </form>
-              ) : (
+              )}
+
+              {mode === 'resetPassword' && (
+                <form className="mt-6 space-y-5" onSubmit={handleResetSubmit}>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">New Password</label>
+                    <input
+                      type="password"
+                      value={resetForm.newPassword}
+                      onChange={(event) => setResetForm((current) => ({ ...current, newPassword: event.target.value }))}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter new password"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={resetForm.confirmPassword}
+                      onChange={(event) => setResetForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Confirm new password"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Resetting...</> : 'Reset Password'}
+                  </button>
+                </form>
+              )}
+
+              {mode === 'register' && (
                 <form className="mt-6 space-y-5" onSubmit={handleRegisterSubmit}>
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">Name</label>
@@ -359,7 +428,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                       type="text"
                       value={registerForm.name}
                       onChange={(event) => setRegisterForm((current) => ({ ...current, name: event.target.value }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                       placeholder="Business owner name"
                       required
                     />
@@ -370,7 +439,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                       type="email"
                       value={registerForm.email}
                       onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                       placeholder="Business email"
                       required
                     />
@@ -381,7 +450,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                       type="text"
                       value={registerForm.businessName}
                       onChange={(event) => setRegisterForm((current) => ({ ...current, businessName: event.target.value }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                       placeholder="Registered business name"
                       required
                     />
@@ -389,9 +458,9 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full rounded-2xl bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
                   >
-                    {isSubmitting ? 'Creating Account...' : 'Register Now'}
+                    {isSubmitting ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Creating Account...</> : 'Register Now'}
                   </button>
                   <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
                     Admin username and password will be delivered to the registered email once registration is complete.
@@ -402,22 +471,23 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
           </section>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
-          <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">Features</p>
-            <h2 className="mt-3 text-3xl font-black text-slate-900 lg:text-4xl">Everything needed to run billing, reporting, and operations in one cloud POS</h2>
+        <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-20">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Features</p>
+            <h2 className="mt-3 text-3xl font-black text-slate-900 lg:text-4xl">Everything you need in one cloud POS</h2>
+            <p className="mt-4 text-base text-slate-500 max-w-2xl mx-auto">Powerful tools designed to simplify your daily business operations</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <article key={feature.title} className="rounded-[1.75rem] border border-white/80 bg-white/80 p-6 shadow-[0_18px_60px_rgba(148,163,184,0.16)] transition hover:-translate-y-1 hover:shadow-[0_20px_70px_rgba(96,165,250,0.18)]">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
-                    <Icon className="h-6 w-6" />
+                <div key={feature.title} className="group relative rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-100 hover:shadow-md hover:shadow-blue-50">
+                  <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${feature.color} transition-transform duration-300 group-hover:scale-110`}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-5 text-xl font-bold text-slate-900">{feature.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{feature.description}</p>
-                </article>
+                  <h3 className="mt-4 text-base font-bold text-slate-900">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">{feature.description}</p>
+                </div>
               );
             })}
           </div>
@@ -448,7 +518,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
             </div>
 
             <div className="rounded-[2rem] border border-white/80 bg-white/80 p-8 shadow-[0_18px_60px_rgba(148,163,184,0.16)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">Why Choose Scanex POS?</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Why Choose Intelli Billing?</p>
               <h2 className="mt-4 text-3xl font-black text-slate-900">Built to simplify daily business operations without adding complexity</h2>
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {reasons.map((reason) => (
@@ -463,8 +533,8 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
 
         <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-16">
           <div className="rounded-[2.25rem] border border-white/80 bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_35%,#fdf2f8_100%)] px-6 py-10 text-center shadow-[0_28px_90px_rgba(148,163,184,0.18)] lg:px-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-600">Ready To Simplify Your Business?</p>
-            <h2 className="mt-4 text-3xl font-black text-slate-900 lg:text-5xl">Start your journey with Scanex POS today</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Ready To Simplify Your Business?</p>
+            <h2 className="mt-4 text-3xl font-black text-slate-900 lg:text-5xl">Start your journey with Intelli Billing today</h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600">
               Cloud billing, reports, attendance, printer support, and staff access in one streamlined platform.
             </p>
@@ -472,7 +542,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
               <button
                 type="button"
                 onClick={() => switchMode('register')}
-                className="rounded-2xl bg-sky-500 px-6 py-4 text-sm font-bold text-white transition hover:bg-sky-600"
+                className="rounded-2xl bg-blue-500 px-6 py-4 text-sm font-bold text-white transition hover:bg-blue-600"
               >
                 Register Now
               </button>
@@ -495,7 +565,7 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
               <span>Privacy Policy</span>
               <span>Terms & Conditions</span>
             </div>
-            <p>Scanex POS cloud platform</p>
+            <p>Intelli Billing Software</p>
           </div>
         </footer>
       </div>

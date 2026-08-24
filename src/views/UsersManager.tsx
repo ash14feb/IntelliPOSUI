@@ -127,7 +127,7 @@ export default function UsersManager({
               type="text"
               value={form.full_name}
               onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               placeholder="User full name"
             />
           </div>
@@ -137,7 +137,7 @@ export default function UsersManager({
               type="email"
               value={form.email}
               onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               placeholder="user@example.com"
             />
           </div>
@@ -148,7 +148,7 @@ export default function UsersManager({
               value={form.username}
               onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
               disabled={editingUserId !== null}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium disabled:opacity-60"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium disabled:opacity-60"
               placeholder="john"
             />
           </div>
@@ -157,7 +157,7 @@ export default function UsersManager({
             <select
               value={form.user_type}
               onChange={(e) => setForm((prev) => ({ ...prev, user_type: e.target.value as 'manager' | 'staff' }))}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
             >
               <option value="staff">Staff</option>
               <option value="manager">Manager</option>
@@ -167,7 +167,7 @@ export default function UsersManager({
             type="button"
             onClick={handleSubmit}
             disabled={!form.full_name || !form.email || (!editingUserId && !form.username) || isSaving}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
           >
             {isSaving ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <UserPlus className="w-5 h-5" />}
             {editingUserId ? 'Update User' : 'Create User'}

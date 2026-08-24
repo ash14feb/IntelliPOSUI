@@ -106,10 +106,10 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (skipPrint = false) => {
     if (cart.length === 0) return;
 
-    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected()) {
+    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint) {
       setShowBluetoothModal(true);
       return;
     }
@@ -128,24 +128,26 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
       customerPhone: customerPhone.trim() || undefined
     };
 
-    try {
-      await ensureBluetoothConnection();
-    } catch (err: any) {
-      setError(err.message || 'Bluetooth printer connection failed');
-      return;
-    }
-
-    if (settings.printerConnectionType === 'usb' || printer.isConnected()) {
+    if (!skipPrint) {
       try {
-        setIsPrinting(true);
-        setError(null);
-        await printReceipt(printer, settings, order.id, cart, subtotal, discount, cgst, sgst, total, customerName.trim(), customerPhone.trim());
+        await ensureBluetoothConnection();
       } catch (err: any) {
-        setError(err.message || 'Printing failed');
-        setIsPrinting(false);
-        return; // Don't complete order if print fails
-      } finally {
-        setIsPrinting(false);
+        setError(err.message || 'Bluetooth printer connection failed');
+        return;
+      }
+
+      if (settings.printerConnectionType === 'usb' || printer.isConnected()) {
+        try {
+          setIsPrinting(true);
+          setError(null);
+          await printReceipt(printer, settings, order.id, cart, subtotal, discount, cgst, sgst, total, customerName.trim(), customerPhone.trim());
+        } catch (err: any) {
+          setError(err.message || 'Printing failed');
+          setIsPrinting(false);
+          return;
+        } finally {
+          setIsPrinting(false);
+        }
       }
     }
 
@@ -235,7 +237,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               onClick={() => setSelectedCategory(category)}
               className={`whitespace-nowrap px-4 py-2 rounded-full font-medium text-sm transition-all ${
                 selectedCategory === category
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -262,7 +264,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                 >
                   {cartItem && (
                     <>
-                      <div className="absolute top-2 right-2 z-10 bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg shadow-indigo-500/40 border-2 border-white">
+                      <div className="absolute top-2 right-2 z-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg shadow-blue-500/40 border-2 border-white">
                         {cartItem.qty}
                       </div>
                       <button
@@ -290,7 +292,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                     </div>
                     <div className="p-4 flex-1 flex flex-col justify-between">
                       <h3 className="font-semibold text-slate-800 line-clamp-2 leading-tight">{item.name}</h3>
-                      <p className="text-indigo-600 font-bold mt-2 text-lg">{settings.currencySymbol}{item.price.toFixed(2)}</p>
+                      <p className="text-blue-600 font-bold mt-2 text-lg">{settings.currencySymbol}{item.price.toFixed(2)}</p>
                     </div>
                   </button>
                 </div>
@@ -305,11 +307,11 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-20 flex justify-between items-center">
           <div>
             <p className="text-sm text-slate-500 font-medium">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
-            <p className="text-xl font-black text-indigo-600">{settings.currencySymbol}{total.toFixed(2)}</p>
+            <p className="text-xl font-black text-blue-600">{settings.currencySymbol}{total.toFixed(2)}</p>
           </div>
           <button 
             onClick={() => setShowMobileCart(true)} 
-            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform"
+            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
           >
             NEXT
           </button>
@@ -323,7 +325,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
       `}>
         <div className="p-4 lg:p-6 border-b border-slate-100 bg-white flex justify-between items-center">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-indigo-600" />
+            <ShoppingCart className="w-6 h-6 text-blue-600" />
             Current Order
           </h2>
           <button 
@@ -347,7 +349,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                 <div className="flex-1 min-w-0 pr-3">
                   <h4 className="font-semibold text-slate-800 truncate">{item.name}</h4>
-                  <p className="text-sm font-medium text-indigo-600">{settings.currencySymbol}{item.price.toFixed(2)}</p>
+                  <p className="text-sm font-medium text-blue-600">{settings.currencySymbol}{item.price.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
@@ -372,7 +374,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                 placeholder="Customer Name (Optional)" 
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
               />
             </div>
             <div>
@@ -381,7 +383,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                 placeholder="Phone Number (Optional)" 
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
               />
             </div>
           </div>
@@ -404,7 +406,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                     type="number" 
                     value={discount} 
                     onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
-                    className="w-16 px-2 py-1 text-right border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-16 px-2 py-1 text-right border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -423,7 +425,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
             )}
             <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-end">
               <span className="text-lg font-bold text-slate-800">Final Total</span>
-              <span className="text-3xl font-black text-indigo-600 tracking-tight">{settings.currencySymbol}{total.toFixed(2)}</span>
+              <span className="text-3xl font-black text-blue-600 tracking-tight">{settings.currencySymbol}{total.toFixed(2)}</span>
             </div>
           </div>
           
@@ -435,7 +437,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                 onClick={() => setPaymentMode(mode)} 
                 className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${
                   paymentMode === mode 
-                    ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-600 shadow-sm' 
+                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-600 shadow-sm' 
                     : 'bg-slate-50 text-slate-500 border-2 border-transparent hover:bg-slate-100'
                 }`}
               >
@@ -465,7 +467,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               className={`${settings.enableKot ? 'flex-[2]' : 'flex-1'} py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
                 cart.length === 0 || isSavingOrder
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 active:scale-[0.98]'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 active:scale-[0.98]'
               }`}
             >
               <Printer className="w-5 h-5" />
@@ -507,9 +509,19 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  setShowBluetoothModal(false);
+                  handleCheckout(true);
+                }}
+                className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                OK, Sale Without Print
+              </button>
+              <button
+                type="button"
                 onClick={handleBluetoothConnectFromModal}
                 disabled={isConnectingPrinter}
-                className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isConnectingPrinter ? 'Connecting...' : 'OK, Connect Printer'}
               </button>

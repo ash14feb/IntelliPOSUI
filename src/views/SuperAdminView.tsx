@@ -43,7 +43,7 @@ export default function SuperAdminView({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="rounded-3xl bg-gradient-to-br from-indigo-600 to-blue-500 p-6 text-white shadow-lg">
+        <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-blue-500 p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold uppercase tracking-wider text-white/80">Registered Stores</span>
             <Building2 className="w-6 h-6 text-white/80" />

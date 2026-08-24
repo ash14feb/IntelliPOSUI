@@ -60,7 +60,7 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
 
   const cards = [
     { label: 'Total Sale', value: `${settings.currencySymbol}${metrics.totalSale.toFixed(2)}`, icon: Wallet, tone: 'from-emerald-500 to-teal-500' },
-    { label: 'Total Customers', value: `${metrics.totalCustomers}`, icon: Users, tone: 'from-sky-500 to-indigo-500' },
+    { label: 'Total Customers', value: `${metrics.totalCustomers}`, icon: Users, tone: 'from-blue-400 to-blue-600' },
     { label: 'Cash Sales', value: `${settings.currencySymbol}${metrics.cashSales.toFixed(2)}`, icon: Receipt, tone: 'from-amber-500 to-orange-500' },
     { label: 'UPI Sales', value: `${settings.currencySymbol}${metrics.upiSales.toFixed(2)}`, icon: Smartphone, tone: 'from-fuchsia-500 to-pink-500' },
     { label: 'Card Sales', value: `${settings.currencySymbol}${metrics.cardSales.toFixed(2)}`, icon: CreditCard, tone: 'from-violet-500 to-purple-500' }
@@ -80,7 +80,7 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
           <button
             key={option.id}
             onClick={() => setPreset(option.id)}
-            className={`px-4 py-2 rounded-full font-semibold ${preset === option.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+            className={`px-4 py-2 rounded-full font-semibold ${preset === option.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
           >
             {option.label}
           </button>
@@ -135,7 +135,7 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
                       <td className="p-4 text-slate-600 font-medium">{order.customerName || 'Walk-in'}</td>
                       <td className="p-4 text-slate-600 font-medium">{order.customerPhone || '-'}</td>
                       <td className="p-4 text-slate-600 font-medium">{order.paymentMode}</td>
-                      <td className="p-4 font-bold text-indigo-600">{settings.currencySymbol}{order.total.toFixed(2)}</td>
+                      <td className="p-4 font-bold text-blue-600">{settings.currencySymbol}{order.total.toFixed(2)}</td>
                       {canDeleteSales && (
                         <td className="p-4">
                           <button
@@ -163,7 +163,7 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
             <BarChart3 className="w-6 h-6" />
           </div>
           <div>
@@ -176,7 +176,7 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
             <div key={item.hour} className="flex flex-col items-center gap-3">
               <div className="w-full bg-slate-100 rounded-t-2xl rounded-b-md relative h-48 flex items-end overflow-hidden">
                 <div
-                  className="w-full bg-gradient-to-t from-indigo-600 to-sky-400 rounded-t-2xl transition-all"
+                  className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-2xl transition-all"
                   style={{ height: `${(item.customers / maxCustomers) * 100}%` }}
                 />
                 <span className="absolute top-3 inset-x-0 text-center text-xs font-bold text-slate-700">{item.customers}</span>

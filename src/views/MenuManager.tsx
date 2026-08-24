@@ -161,7 +161,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               type="text"
               value={newCategory}
               onChange={e => setNewCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               placeholder="e.g. Burgers, Combos, Beverages"
             />
           </div>
@@ -198,7 +198,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               type="text"
               value={newItem.name}
               onChange={e => setNewItem({ ...newItem, name: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               placeholder="e.g. Spicy Chicken Burger"
             />
           </div>
@@ -208,7 +208,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               type="number"
               value={newItem.price || ''}
               onChange={e => setNewItem({ ...newItem, price: parseFloat(e.target.value) })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
               placeholder="0.00"
             />
           </div>
@@ -217,7 +217,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
             <select
               value={newItem.category}
               onChange={e => setNewItem({ ...newItem, category: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
             >
               {categories.map(category => (
                 <option key={category.id} value={category.name}>
@@ -247,7 +247,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
           <button
             onClick={handleSaveItem}
             disabled={!newItem.name || !newItem.price || isSaving}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
           >
             <Plus className="w-5 h-5" />
             {isSaving ? 'Saving...' : editingItemId ? 'Update Item' : 'Add Item'}
@@ -270,7 +270,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               <button
                 onClick={() => handleEditStart(item)}
                 disabled={isSaving}
-                className="absolute top-4 left-4 p-2.5 bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-indigo-600 hover:text-white rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute top-4 left-4 p-2.5 bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-blue-600 hover:text-white rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Pencil className="w-5 h-5" />
               </button>
@@ -283,9 +283,9 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               </button>
             </div>
             <div className="p-5">
-              <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">{item.category}</div>
+              <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">{item.category}</div>
               <h3 className="font-bold text-slate-800 text-lg leading-tight">{item.name}</h3>
-              <p className="text-indigo-600 font-black mt-2 text-xl">{settings.currencySymbol}{item.price.toFixed(2)}</p>
+              <p className="text-blue-600 font-black mt-2 text-xl">{settings.currencySymbol}{item.price.toFixed(2)}</p>
             </div>
           </div>
         ))}

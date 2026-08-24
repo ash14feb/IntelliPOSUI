@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings } from '../types';
-import { Menu } from 'lucide-react';
+import { LoaderCircle, Menu } from 'lucide-react';
 
 interface SettingsViewProps {
   settings: Settings;
@@ -45,7 +45,7 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-full font-semibold ${activeTab === tab.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+            className={`px-4 py-2 rounded-full font-semibold ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
           >
             {tab.label}
           </button>
@@ -58,11 +58,11 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Store Name</label>
-              <input type="text" name="restaurantName" value={settings.restaurantName} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" />
+              <input type="text" name="restaurantName" value={settings.restaurantName} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Currency Symbol</label>
-              <input type="text" name="currencySymbol" value={settings.currencySymbol} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" placeholder="e.g. Rs., $, EUR" />
+              <input type="text" name="currencySymbol" value={settings.currencySymbol} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" placeholder="e.g. Rs., $, EUR" />
             </div>
           </div>
         </section>
@@ -74,11 +74,11 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">CGST Percentage (%)</label>
-              <input type="number" name="cgstPercent" value={settings.cgstPercent} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" />
+              <input type="number" name="cgstPercent" value={settings.cgstPercent} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">SGST Percentage (%)</label>
-              <input type="number" name="sgstPercent" value={settings.sgstPercent} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" />
+              <input type="number" name="sgstPercent" value={settings.sgstPercent} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
             </div>
             <div className="md:col-span-2">
               <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
@@ -99,11 +99,11 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Receipt Header Message</label>
-              <input type="text" name="receiptHeader" value={settings.receiptHeader} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" />
+              <input type="text" name="receiptHeader" value={settings.receiptHeader} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Receipt Footer Message</label>
-              <input type="text" name="receiptFooter" value={settings.receiptFooter} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium" />
+              <input type="text" name="receiptFooter" value={settings.receiptFooter} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" />
             </div>
             <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
               <input type="checkbox" className="h-4 w-4" checked={settings.enableKot} onChange={e => setSettings({ ...settings, enableKot: e.target.checked })} />
@@ -122,14 +122,14 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Connection Type</label>
-              <select name="printerConnectionType" value={settings.printerConnectionType} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium">
+              <select name="printerConnectionType" value={settings.printerConnectionType} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium">
                 <option value="bluetooth">Bluetooth</option>
                 <option value="usb">USB</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Paper Width</label>
-              <select name="paperWidth" value={settings.paperWidth} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium">
+              <select name="paperWidth" value={settings.paperWidth} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium">
                 <option value="2inch">2 Inch</option>
                 <option value="3inch">3 Inch</option>
               </select>
@@ -154,9 +154,9 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
             }
           }}
           disabled={isSaving}
-          className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
         >
-          {isSaving ? 'Saving...' : 'Save Settings'}
+          {isSaving ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Settings'}
         </button>
       </div>
     </div>

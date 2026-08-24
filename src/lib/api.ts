@@ -3,12 +3,15 @@ import {
   AuthSession,
   AuthUser,
   Category,
+  ChangePasswordPayload,
   CreateStoreUserPayload,
+  ForgotPasswordPayload,
   LoginPayload,
   MenuItem,
   Order,
   RegisteredStore,
   RegistrationPayload,
+  ResetPasswordPayload,
   Settings,
   StoreUser,
   UpdateStoreUserPayload
@@ -239,4 +242,28 @@ export async function resendAdminCredentials(tenantId: number): Promise<void> {
   await request<{ success: boolean; message: string }>(`/api/auth/super-admin/stores/${tenantId}/resend-admin-credentials`, {
     method: 'POST'
   });
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<string> {
+  const response = await request<{ success: boolean; message: string }>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  return response.message;
+}
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<string> {
+  const response = await request<{ success: boolean; message: string }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  return response.message;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<string> {
+  const response = await request<{ success: boolean; message: string }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  return response.message;
 }

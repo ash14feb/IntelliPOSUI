@@ -1,1 +1,94 @@
 @import "tailwindcss";
+
+button,
+a,
+label[for],
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  cursor: pointer;
+}
+
+@keyframes wave-1 {
+  0% { transform: translateX(-20%) translateY(0) scale(1); opacity: 0.2; }
+  25% { transform: translateX(10%) translateY(-30px) scale(1.05); opacity: 0.3; }
+  50% { transform: translateX(30%) translateY(10px) scale(0.95); opacity: 0.18; }
+  75% { transform: translateX(10%) translateY(25px) scale(1.02); opacity: 0.28; }
+  100% { transform: translateX(-20%) translateY(0) scale(1); opacity: 0.2; }
+}
+
+@keyframes wave-2 {
+  0% { transform: translateX(15%) translateY(0) scale(1); opacity: 0.18; }
+  25% { transform: translateX(-10%) translateY(20px) scale(1.08); opacity: 0.28; }
+  50% { transform: translateX(-25%) translateY(-15px) scale(0.92); opacity: 0.15; }
+  75% { transform: translateX(-5%) translateY(-25px) scale(1.05); opacity: 0.25; }
+  100% { transform: translateX(15%) translateY(0) scale(1); opacity: 0.18; }
+}
+
+@keyframes wave-3 {
+  0% { transform: translateX(-10%) translateY(0) scale(1); opacity: 0.15; }
+  25% { transform: translateX(20%) translateY(25px) scale(1.1); opacity: 0.25; }
+  50% { transform: translateX(5%) translateY(-20px) scale(0.9); opacity: 0.12; }
+  75% { transform: translateX(-15%) translateY(15px) scale(1.06); opacity: 0.22; }
+  100% { transform: translateX(-10%) translateY(0) scale(1); opacity: 0.15; }
+}
+
+@keyframes wave-4 {
+  0% { transform: translateX(10%) translateY(0) scale(1); opacity: 0.2; }
+  25% { transform: translateX(-15%) translateY(-20px) scale(0.95); opacity: 0.3; }
+  50% { transform: translateX(-30%) translateY(15px) scale(1.08); opacity: 0.16; }
+  75% { transform: translateX(5%) translateY(30px) scale(1); opacity: 0.26; }
+  100% { transform: translateX(10%) translateY(0) scale(1); opacity: 0.2; }
+}
+
+@keyframes wave-5 {
+  0% { transform: translateX(5%) translateY(0) scale(1); opacity: 0.16; }
+  25% { transform: translateX(25%) translateY(15px) scale(1.06); opacity: 0.26; }
+  50% { transform: translateX(-5%) translateY(-25px) scale(0.94); opacity: 0.14; }
+  75% { transform: translateX(-20%) translateY(10px) scale(1.1); opacity: 0.24; }
+  100% { transform: translateX(5%) translateY(0) scale(1); opacity: 0.16; }
+}
+
+.smoke-cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.smoke-cloud-1 {
+  width: 600px;
+  height: 400px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(168,85,247,0.35), rgba(236,72,153,0.3));
+  animation: wave-1 7s linear infinite;
+}
+
+.smoke-cloud-2 {
+  width: 550px;
+  height: 380px;
+  background: linear-gradient(225deg, rgba(14,165,233,0.35), rgba(34,197,94,0.3), rgba(250,204,21,0.25));
+  animation: wave-2 9s linear infinite;
+}
+
+.smoke-cloud-3 {
+  width: 500px;
+  height: 350px;
+  background: linear-gradient(315deg, rgba(244,63,94,0.3), rgba(251,146,60,0.25), rgba(168,85,247,0.3));
+  animation: wave-3 8s linear infinite;
+}
+
+.smoke-cloud-4 {
+  width: 480px;
+  height: 340px;
+  background: linear-gradient(45deg, rgba(34,197,94,0.3), rgba(14,165,233,0.35), rgba(99,102,241,0.25));
+  animation: wave-4 10s linear infinite;
+}
+
+.smoke-cloud-5 {
+  width: 520px;
+  height: 360px;
+  background: linear-gradient(180deg, rgba(250,204,21,0.25), rgba(244,63,94,0.3), rgba(168,85,247,0.25));
+  animation: wave-5 7.5s linear infinite;
+}

@@ -75,12 +75,12 @@ export default function CategoriesManager({ categories, onAddCategory, onUpdateC
             value={newCategory}
             onChange={e => setNewCategory(e.target.value)}
             placeholder="Enter category name"
-            className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+            className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
           />
           <button
             onClick={handleAdd}
             disabled={!newCategory.trim() || isSaving}
-            className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add
@@ -101,7 +101,7 @@ export default function CategoriesManager({ categories, onAddCategory, onUpdateC
                     type="text"
                     value={editingName}
                     onChange={e => setEditingName(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
                   />
                 ) : (
                   <div className="font-semibold text-slate-800">{category.name}</div>

@@ -11,7 +11,7 @@ import {
   startOfWeek,
   subMonths
 } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, Menu, PieChart, Receipt, TrendingUp, Users } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Download, Menu, PieChart, Receipt, TrendingUp, Users } from 'lucide-react';
 import { Order, Settings } from '../types';
 import { filterOrdersByRange, getRangeFromPreset, getRangeLabel, ReportRangePreset } from '../lib/reportUtils';
 
@@ -107,13 +107,50 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
 
   const maxDailySales = Math.max(...monthSales, 1);
 
+  const exportToCSV = () => {
+    let headers: string[] = [];
+    let rows: string[][] = [];
+
+    if (mode === 'sales') {
+      headers = ['Order ID', 'Date & Time', 'Customer Name', 'Phone', 'Payment', 'Total'];
+      rows = [...filteredOrders].reverse().map(order => [
+        `#${order.id}`,
+        format(order.timestamp, 'MMM dd, yyyy HH:mm'),
+        order.customerName || 'Walk-in',
+        order.customerPhone || '-',
+        order.paymentMode,
+        `${settings.currencySymbol}${order.total.toFixed(2)}`
+      ]);
+    } else if (mode === 'customers') {
+      headers = ['Name', 'Phone', 'Visits', 'Total Spent', 'Last Visit'];
+      rows = customers.map(customer => [
+        customer.name,
+        customer.phone,
+        String(customer.visits),
+        `${settings.currencySymbol}${customer.totalSpent.toFixed(2)}`,
+        format(customer.lastVisit, 'MMM dd, yyyy HH:mm')
+      ]);
+    } else {
+      return;
+    }
+
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${mode === 'sales' ? 'sales-report' : 'customer-report'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const renderRangeFilter = () => (
     <div className="flex flex-wrap gap-3 mb-6">
       {presets.map(option => (
         <button
           key={option.id}
           onClick={() => setPreset(option.id)}
-          className={`px-4 py-2 rounded-full font-semibold ${preset === option.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+          className={`px-4 py-2 rounded-full font-semibold ${preset === option.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
         >
           {option.label}
         </button>
@@ -130,12 +167,21 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto h-full overflow-y-auto">
       <div className="flex items-center gap-3 mb-8">
-        <button onClick={onMenuClick} className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+        <button onClick={onMenuClick} className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer">
           <Menu className="w-6 h-6" />
         </button>
-        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
+        <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex-1">
           {mode === 'sales' ? 'Sales Report' : mode === 'customers' ? 'Customer Report' : 'Sales Calendar'}
         </h1>
+        {mode !== 'calendar' && (
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+        )}
       </div>
 
       {mode !== 'calendar' && renderRangeFilter()}
@@ -144,7 +190,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
         <>
           <div className="text-sm font-medium text-slate-500 mb-6">{getRangeLabel(range)}</div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <MetricCard icon={TrendingUp} label="Revenue" value={`${settings.currencySymbol}${salesSummary.totalRevenue.toFixed(2)}`} tone="indigo" />
+            <MetricCard icon={TrendingUp} label="Revenue" value={`${settings.currencySymbol}${salesSummary.totalRevenue.toFixed(2)}`} tone="blue" />
             <MetricCard icon={Receipt} label="Orders" value={`${salesSummary.totalOrders}`} tone="emerald" />
             <MetricCard icon={Users} label="Items Sold" value={`${salesSummary.totalItems}`} tone="sky" />
             <MetricCard icon={PieChart} label="Tax" value={`${settings.currencySymbol}${salesSummary.totalTax.toFixed(2)}`} tone="amber" />
@@ -180,7 +226,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
                         <td className="p-5 lg:p-6 text-slate-600 font-medium">{order.customerName || 'Walk-in'}</td>
                         <td className="p-5 lg:p-6 text-slate-600 font-medium">{order.customerPhone || '-'}</td>
                         <td className="p-5 lg:p-6 text-slate-600 font-medium">{order.paymentMode}</td>
-                        <td className="p-5 lg:p-6 font-black text-indigo-600 text-lg">{settings.currencySymbol}{order.total.toFixed(2)}</td>
+                        <td className="p-5 lg:p-6 font-black text-blue-600 text-lg">{settings.currencySymbol}{order.total.toFixed(2)}</td>
                         {canDeleteSales && (
                           <td className="p-5 lg:p-6">
                             <button
@@ -249,7 +295,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
                             {customer.visits}
                           </span>
                         </td>
-                        <td className="p-5 lg:p-6 font-bold text-indigo-600">{settings.currencySymbol}{customer.totalSpent.toFixed(2)}</td>
+                        <td className="p-5 lg:p-6 font-bold text-blue-600">{settings.currencySymbol}{customer.totalSpent.toFixed(2)}</td>
                         <td className="p-5 lg:p-6 text-slate-600 font-medium">{format(customer.lastVisit, 'MMM dd, yyyy HH:mm')}</td>
                       </tr>
                     ))
@@ -285,7 +331,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
               const bgClass = intensity > 0.75 ? 'bg-emerald-500 text-white' : intensity > 0.45 ? 'bg-emerald-200 text-emerald-950' : intensity > 0.15 ? 'bg-emerald-50 text-emerald-800' : !isSameMonth(day, currentMonth) ? 'bg-slate-50 text-slate-300' : 'bg-white text-slate-800';
 
               return (
-                <div key={key} className={`min-h-32 border-b border-r border-slate-100 p-3 ${bgClass} ${isToday(day) ? 'ring-2 ring-indigo-300 ring-inset' : ''}`}>
+                <div key={key} className={`min-h-32 border-b border-r border-slate-100 p-3 ${bgClass} ${isToday(day) ? 'ring-2 ring-blue-300 ring-inset' : ''}`}>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold">{format(day, 'd')}</span>
                     {sales && (
@@ -319,12 +365,12 @@ function MetricCard({
   icon: typeof TrendingUp;
   label: string;
   value: string;
-  tone: 'indigo' | 'emerald' | 'sky' | 'amber';
+  tone: 'blue' | 'emerald' | 'sky' | 'amber';
 }) {
   const tones = {
-    indigo: 'bg-indigo-50 text-indigo-600',
+    blue: 'bg-blue-50 text-blue-600',
     emerald: 'bg-emerald-50 text-emerald-600',
-    sky: 'bg-sky-50 text-sky-600',
+    sky: 'bg-blue-50 text-blue-600',
     amber: 'bg-amber-50 text-amber-600'
   };
 

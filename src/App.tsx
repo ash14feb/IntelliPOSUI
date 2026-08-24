@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import { AuthSession, Category, MenuItem, Order, RegisteredStore, Settings, StoreUser } from './types';
 import Sidebar from './components/Sidebar';
 import NotificationToast, { NotificationToastState } from './components/NotificationToast';
@@ -37,7 +38,7 @@ import {
 } from './lib/api';
 
 const DEFAULT_SETTINGS: Settings = {
-  restaurantName: 'SCANEX ULTRA POS',
+  restaurantName: 'Intelli Billing Software',
   currencySymbol: 'Rs.',
   cgstPercent: 2.5,
   sgstPercent: 2.5,
@@ -45,7 +46,7 @@ const DEFAULT_SETTINGS: Settings = {
   enableKot: true,
   printerConnectionType: 'bluetooth',
   paperWidth: '3inch',
-  receiptHeader: 'Welcome to Scanex!',
+  receiptHeader: 'Welcome to Intelli Billing!',
   receiptFooter: 'Thank you for visiting!'
 };
 
@@ -380,7 +381,8 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center text-slate-600 font-semibold">
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center gap-3 text-slate-600 font-semibold">
+        <LoaderCircle className="w-8 h-8 animate-spin text-blue-600" />
         Loading data...
       </div>
     );
@@ -388,24 +390,10 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} user={session.user} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} user={session.user} settings={settings} onLogout={handleLogout} onNotify={notify} />
       <main className="flex-1 overflow-hidden relative">
         <div className="pointer-events-none absolute right-4 top-20 z-40 w-full max-w-sm">
           <NotificationToast notification={notification} />
-        </div>
-        <div className="absolute right-4 top-4 z-30 flex items-center gap-3">
-          <div className="hidden rounded-2xl bg-white/90 px-4 py-2 text-right shadow-lg shadow-slate-200/70 sm:block">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Logged In</p>
-            <p className="text-sm font-bold text-slate-900">{session.user.full_name}</p>
-            <p className="text-xs text-slate-500">{session.user.username}</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition hover:bg-slate-800"
-          >
-            Logout
-          </button>
         </div>
 
         {loadError && (

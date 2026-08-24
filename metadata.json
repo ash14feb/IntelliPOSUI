@@ -1,5 +1,5 @@
 {
-  "name": "Remix: DREAMCUBE POS",
+  "name": "Intelli Billing Software",
   "description": "PWA for printing receipts to 58mm Bluetooth thermal printers using Web Bluetooth API.",
   "requestFramePermissions": [
     "bluetooth"
