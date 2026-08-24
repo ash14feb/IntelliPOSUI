@@ -174,10 +174,8 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
       setDiscount(0);
       setCustomerName('');
       setCustomerPhone('');
-      if (mustPrint) {
-        setShowOrderSuccess(true);
-        setTimeout(() => setShowOrderSuccess(false), 2000);
-      }
+      setShowOrderSuccess(true);
+      setTimeout(() => setShowOrderSuccess(false), 2000);
     } catch (err: any) {
       setError(err.message || 'Order save failed');
     }
@@ -573,11 +571,14 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
       {/* Order Success Animation */}
       {showOrderSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-          <div className="order-success-circle">
-            <svg className="order-success-check" viewBox="0 0 52 52">
-              <circle className="order-success-check-circle" cx="26" cy="26" r="25" fill="none" />
-              <path className="order-success-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-            </svg>
+          <div className="flex flex-col items-center gap-4">
+            <div className="order-success-circle">
+              <svg className="order-success-check" viewBox="0 0 52 52">
+                <circle className="order-success-check-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="order-success-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <span className="text-white text-2xl font-bold tracking-wide animate-fade-in">Order Placed</span>
           </div>
         </div>
       )}
