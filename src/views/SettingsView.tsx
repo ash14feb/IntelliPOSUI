@@ -11,7 +11,7 @@ interface SettingsViewProps {
   onNotify: (message: string, tone?: 'success' | 'error' | 'info') => void;
 }
 
-type SettingsTab = 'restaurant' | 'tax' | 'receipt' | 'printer';
+type SettingsTab = 'restaurant' | 'tax' | 'receipt' | 'printer' | 'order';
 
 export default function SettingsView({ settings, setSettings, onSave, isSaving, onMenuClick, onNotify }: SettingsViewProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('restaurant');
@@ -28,6 +28,7 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
     { id: 'restaurant', label: 'Store Details' },
     { id: 'tax', label: 'Tax Configuration' },
     { id: 'receipt', label: 'Receipt Settings' },
+    { id: 'order', label: 'Order Settings' },
     { id: 'printer', label: 'Printer Setup' }
   ];
 
@@ -110,6 +111,21 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
               <div>
                 <div className="font-semibold text-slate-800">Enable KOT Printing</div>
                 <div className="text-sm text-slate-500">Show the KOT button only when this is enabled.</div>
+              </div>
+            </label>
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'order' && (
+        <section className="bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">Order Settings</h2>
+          <div className="space-y-6">
+            <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+              <input type="checkbox" className="h-4 w-4" checked={settings.orderAfterBill} onChange={e => setSettings({ ...settings, orderAfterBill: e.target.checked })} />
+              <div>
+                <div className="font-semibold text-slate-800">Print Bill Before Order</div>
+                <div className="text-sm text-slate-500">When enabled, clicking Pay will print the bill first. The order is accepted only after the bill is printed successfully.</div>
               </div>
             </label>
           </div>

@@ -47,7 +47,8 @@ const DEFAULT_SETTINGS: Settings = {
   printerConnectionType: 'bluetooth',
   paperWidth: '3inch',
   receiptHeader: 'Welcome to Intelli Billing!',
-  receiptFooter: 'Thank you for visiting!'
+  receiptFooter: 'Thank you for visiting!',
+  orderAfterBill: false
 };
 
 export default function App() {

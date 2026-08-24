@@ -92,3 +92,50 @@ select {
   background: linear-gradient(180deg, rgba(250,204,21,0.25), rgba(244,63,94,0.3), rgba(168,85,247,0.25));
   animation: wave-5 7.5s linear infinite;
 }
+
+/* Green Tick Success Animation */
+.order-success-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: order-success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+}
+
+.order-success-check {
+  width: 80px;
+  height: 80px;
+}
+
+.order-success-check-circle {
+  stroke: white;
+  stroke-width: 2;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: order-success-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.1s forwards;
+}
+
+.order-success-check-path {
+  stroke: white;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: order-success-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+}
+
+@keyframes order-success-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes order-success-stroke {
+  0% { stroke-dashoffset: 166; }
+  100% { stroke-dashoffset: 0; }
+}

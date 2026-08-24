@@ -9,6 +9,7 @@ export interface Settings {
   paperWidth: '2inch' | '3inch';
   receiptHeader: string;
   receiptFooter: string;
+  orderAfterBill: boolean;
 }
 
 export interface Category {

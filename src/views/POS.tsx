@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { MenuItem, CartItem, Settings, Order, PaymentMode } from '../types';
 import { printReceipt, printKOT } from '../lib/printReceipt';
-import { Plus, Minus, Trash2, Printer, Bluetooth, BluetoothOff, AlertCircle, ShoppingCart, Menu, FileText } from 'lucide-react';
+import { Plus, Minus, Trash2, Printer, Bluetooth, BluetoothOff, AlertCircle, ShoppingCart, Menu, FileText, Search, X } from 'lucide-react';
 import { PrinterDevice } from '../lib/printerTypes';
 
 interface POSProps {
@@ -30,6 +30,8 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [showBluetoothModal, setShowBluetoothModal] = useState(false);
   const [isConnectingPrinter, setIsConnectingPrinter] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set(menuItems.map(item => item.category));
@@ -37,9 +39,16 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
   }, [menuItems]);
 
   const filteredItems = useMemo(() => {
-    if (selectedCategory === 'All') return menuItems;
-    return menuItems.filter(item => item.category === selectedCategory);
-  }, [menuItems, selectedCategory]);
+    let items = menuItems;
+    if (selectedCategory !== 'All') {
+      items = items.filter(item => item.category === selectedCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(item => item.name.toLowerCase().includes(q));
+    }
+    return items;
+  }, [menuItems, selectedCategory, searchQuery]);
 
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
@@ -109,6 +118,8 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
   const handleCheckout = async (skipPrint = false) => {
     if (cart.length === 0) return;
 
+    const mustPrint = settings.orderAfterBill;
+
     if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint) {
       setShowBluetoothModal(true);
       return;
@@ -148,7 +159,11 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
         } finally {
           setIsPrinting(false);
         }
+      } else if (mustPrint) {
+        return;
       }
+    } else if (mustPrint) {
+      return;
     }
 
     try {
@@ -159,6 +174,10 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
       setDiscount(0);
       setCustomerName('');
       setCustomerPhone('');
+      if (mustPrint) {
+        setShowOrderSuccess(true);
+        setTimeout(() => setShowOrderSuccess(false), 2000);
+      }
     } catch (err: any) {
       setError(err.message || 'Order save failed');
     }
@@ -244,6 +263,25 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               {category}
             </button>
           ))}
+        </div>
+
+        {/* Search Bar */}
+        <div className="bg-white border-b border-slate-200 px-4 lg:px-6 py-3 z-10">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -507,16 +545,18 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowBluetoothModal(false);
-                  handleCheckout(true);
-                }}
-                className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-              >
-                OK, Sale Without Print
-              </button>
+              {!settings.orderAfterBill && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBluetoothModal(false);
+                    handleCheckout(true);
+                  }}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  OK, Sale Without Print
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleBluetoothConnectFromModal}
@@ -526,6 +566,18 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                 {isConnectingPrinter ? 'Connecting...' : 'OK, Connect Printer'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Success Animation */}
+      {showOrderSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+          <div className="order-success-circle">
+            <svg className="order-success-check" viewBox="0 0 52 52">
+              <circle className="order-success-check-circle" cx="26" cy="26" r="25" fill="none" />
+              <path className="order-success-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+            </svg>
           </div>
         </div>
       )}
