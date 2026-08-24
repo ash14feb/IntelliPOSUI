@@ -120,7 +120,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
 
     const mustPrint = settings.orderAfterBill;
 
-    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint) {
+    if (settings.printerConnectionType === 'bluetooth' && !printer.isConnected() && !skipPrint && !mustPrint) {
       setShowBluetoothModal(true);
       return;
     }
