@@ -11,14 +11,14 @@ import {
   startOfWeek,
   subMonths
 } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, Download, Menu, PieChart, Receipt, TrendingUp, Users } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Download, Menu, Package, PieChart, Receipt, TrendingUp, Users } from 'lucide-react';
 import { Order, Settings } from '../types';
 import { filterOrdersByRange, getRangeFromPreset, getRangeLabel, ReportRangePreset } from '../lib/reportUtils';
 
 interface ReportsProps {
   orders: Order[];
   settings: Settings;
-  mode?: 'sales' | 'customers' | 'calendar';
+  mode?: 'sales' | 'customers' | 'calendar' | 'items' | 'payment' | 'topCustomers';
   canDeleteSales?: boolean;
   onDeleteSale?: (orderId: string) => Promise<void>;
   onMenuClick: () => void;
@@ -81,6 +81,53 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
     return results;
   }, [filteredOrders, showOnlyRepeatCustomers]);
 
+  const salesByItem = useMemo(() => {
+    const map = new Map<string, { name: string; category: string; qty: number; revenue: number }>();
+    filteredOrders.forEach(order => {
+      order.items.forEach(item => {
+        const existing = map.get(item.id) || { name: item.name, category: item.category, qty: 0, revenue: 0 };
+        existing.qty += item.qty;
+        existing.revenue += item.lineTotal ?? item.price * item.qty;
+        map.set(item.id, existing);
+      });
+    });
+    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
+  }, [filteredOrders]);
+
+  const salesByPayment = useMemo(() => {
+    const map = new Map<string, { count: number; revenue: number }>();
+    const modes = ['CASH', 'UPI', 'CARD'] as const;
+    modes.forEach(m => map.set(m, { count: 0, revenue: 0 }));
+    filteredOrders.forEach(order => {
+      const existing = map.get(order.paymentMode) || { count: 0, revenue: 0 };
+      existing.count += 1;
+      existing.revenue += order.total;
+      map.set(order.paymentMode, existing);
+    });
+    return Array.from(map.entries()).map(([mode, data]) => ({ mode, ...data })).filter(d => d.count > 0).sort((a, b) => b.revenue - a.revenue);
+  }, [filteredOrders]);
+
+  const topCustomers = useMemo(() => {
+    const map = new Map<string, { name: string; phone: string; visits: number; totalSpent: number; lastVisit: number }>();
+    filteredOrders.forEach(order => {
+      const phone = order.customerPhone?.trim();
+      if (!phone) return;
+      const existing = map.get(phone) || {
+        name: order.customerName?.trim() || 'Walk-in Customer',
+        phone,
+        visits: 0,
+        totalSpent: 0,
+        lastVisit: 0
+      };
+      existing.visits += 1;
+      existing.totalSpent += order.total;
+      existing.lastVisit = Math.max(existing.lastVisit, order.timestamp);
+      if (order.customerName?.trim()) existing.name = order.customerName.trim();
+      map.set(phone, existing);
+    });
+    return Array.from(map.values()).sort((a, b) => b.totalSpent - a.totalSpent);
+  }, [filteredOrders]);
+
   const salesByDay = useMemo(() => {
     return orders.reduce<Record<string, { total: number; orders: number }>>((acc, order) => {
       const key = format(order.timestamp, 'yyyy-MM-dd');
@@ -130,6 +177,30 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
         `${settings.currencySymbol}${customer.totalSpent.toFixed(2)}`,
         format(customer.lastVisit, 'MMM dd, yyyy HH:mm')
       ]);
+    } else if (mode === 'items') {
+      headers = ['Item Name', 'Category', 'Quantity Sold', 'Revenue'];
+      rows = salesByItem.map(item => [
+        item.name,
+        item.category,
+        String(item.qty),
+        `${settings.currencySymbol}${item.revenue.toFixed(2)}`
+      ]);
+    } else if (mode === 'payment') {
+      headers = ['Payment Mode', 'Orders', 'Revenue'];
+      rows = salesByPayment.map(d => [
+        d.mode,
+        String(d.count),
+        `${settings.currencySymbol}${d.revenue.toFixed(2)}`
+      ]);
+    } else if (mode === 'topCustomers') {
+      headers = ['Name', 'Phone', 'Visits', 'Total Spent', 'Last Visit'];
+      rows = topCustomers.map(c => [
+        c.name,
+        c.phone,
+        String(c.visits),
+        `${settings.currencySymbol}${c.totalSpent.toFixed(2)}`,
+        format(c.lastVisit, 'MMM dd, yyyy HH:mm')
+      ]);
     } else {
       return;
     }
@@ -139,7 +210,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${mode === 'sales' ? 'sales-report' : 'customer-report'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.download = `${mode === 'sales' ? 'sales-report' : mode === 'customers' ? 'customer-report' : mode === 'items' ? 'items-report' : mode === 'payment' ? 'payment-report' : 'top-customers'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -171,7 +242,7 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
           <Menu className="w-6 h-6" />
         </button>
         <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex-1">
-          {mode === 'sales' ? 'Sales Report' : mode === 'customers' ? 'Customer Report' : 'Sales Calendar'}
+          {mode === 'sales' ? 'Sales Report' : mode === 'customers' ? 'Customer Report' : mode === 'items' ? 'Sales by Item' : mode === 'payment' ? 'Sales by Payment' : mode === 'topCustomers' ? 'Top Customers' : 'Sales Calendar'}
         </h1>
         {mode !== 'calendar' && (
           <button
@@ -297,6 +368,153 @@ export default function Reports({ orders, settings, mode = 'sales', canDeleteSal
                         </td>
                         <td className="p-5 lg:p-6 font-bold text-blue-600">{settings.currencySymbol}{customer.totalSpent.toFixed(2)}</td>
                         <td className="p-5 lg:p-6 text-slate-600 font-medium">{format(customer.lastVisit, 'MMM dd, yyyy HH:mm')}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {mode === 'items' && (
+        <>
+          <div className="text-sm font-medium text-slate-500 mb-6">{getRangeLabel(range)}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <MetricCard icon={Package} label="Unique Items" value={`${salesByItem.length}`} tone="blue" />
+            <MetricCard icon={Receipt} label="Total Items Sold" value={`${salesByItem.reduce((s, i) => s + i.qty, 0)}`} tone="emerald" />
+            <MetricCard icon={TrendingUp} label="Total Revenue" value={`${settings.currencySymbol}${salesByItem.reduce((s, i) => s + i.revenue, 0).toFixed(2)}`} tone="sky" />
+          </div>
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-20">
+            <div className="p-6 lg:p-8 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800">Sales by Item</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                    <th className="p-5 lg:p-6 border-b border-slate-100">#</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Item Name</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Category</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Qty Sold</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {salesByItem.length === 0 ? (
+                    <tr><td colSpan={5} className="p-10 text-center text-slate-400 font-medium">No item data for this range</td></tr>
+                  ) : (
+                    salesByItem.map((item, idx) => (
+                      <tr key={item.name} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-5 lg:p-6 text-slate-400 font-bold">{idx + 1}</td>
+                        <td className="p-5 lg:p-6 font-bold text-slate-800">{item.name}</td>
+                        <td className="p-5 lg:p-6 text-slate-600 font-medium">{item.category}</td>
+                        <td className="p-5 lg:p-6">
+                          <span className="inline-flex px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">{item.qty}</span>
+                        </td>
+                        <td className="p-5 lg:p-6 font-black text-blue-600 text-lg">{settings.currencySymbol}{item.revenue.toFixed(2)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {mode === 'payment' && (
+        <>
+          <div className="text-sm font-medium text-slate-500 mb-6">{getRangeLabel(range)}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {salesByPayment.map(d => (
+              <MetricCard
+                key={d.mode}
+                icon={d.mode === 'CASH' ? Receipt : d.mode === 'UPI' ? TrendingUp : PieChart}
+                label={d.mode}
+                value={`${settings.currencySymbol}${d.revenue.toFixed(2)}`}
+                tone={d.mode === 'CASH' ? 'emerald' : d.mode === 'UPI' ? 'blue' : 'amber'}
+              />
+            ))}
+          </div>
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-20">
+            <div className="p-6 lg:p-8 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800">Sales by Payment Mode</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Payment Mode</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Orders</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Revenue</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {salesByPayment.length === 0 ? (
+                    <tr><td colSpan={4} className="p-10 text-center text-slate-400 font-medium">No payment data for this range</td></tr>
+                  ) : (
+                    (() => {
+                      const totalRev = salesByPayment.reduce((s, d) => s + d.revenue, 0);
+                      return salesByPayment.map(d => (
+                        <tr key={d.mode} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-5 lg:p-6">
+                            <span className={`inline-flex px-4 py-1.5 rounded-full text-sm font-bold ${d.mode === 'CASH' ? 'bg-emerald-50 text-emerald-700' : d.mode === 'UPI' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>{d.mode}</span>
+                          </td>
+                          <td className="p-5 lg:p-6 font-bold text-slate-800">{d.count}</td>
+                          <td className="p-5 lg:p-6 font-black text-blue-600 text-lg">{settings.currencySymbol}{d.revenue.toFixed(2)}</td>
+                          <td className="p-5 lg:p-6 font-semibold text-slate-600">{totalRev > 0 ? ((d.revenue / totalRev) * 100).toFixed(1) : '0'}%</td>
+                        </tr>
+                      ));
+                    })()
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {mode === 'topCustomers' && (
+        <>
+          <div className="text-sm font-medium text-slate-500 mb-6">{getRangeLabel(range)}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <MetricCard icon={Users} label="Total Customers" value={`${topCustomers.length}`} tone="blue" />
+            <MetricCard icon={TrendingUp} label="Total Revenue" value={`${settings.currencySymbol}${topCustomers.reduce((s, c) => s + c.totalSpent, 0).toFixed(2)}`} tone="emerald" />
+            <MetricCard icon={Receipt} label="Avg Spend / Customer" value={`${settings.currencySymbol}${topCustomers.length > 0 ? (topCustomers.reduce((s, c) => s + c.totalSpent, 0) / topCustomers.length).toFixed(2) : '0.00'}`} tone="amber" />
+          </div>
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-20">
+            <div className="p-6 lg:p-8 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800">Top Customers</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Rank</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Name</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Phone</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Visits</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Total Spent</th>
+                    <th className="p-5 lg:p-6 border-b border-slate-100">Last Visit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {topCustomers.length === 0 ? (
+                    <tr><td colSpan={6} className="p-10 text-center text-slate-400 font-medium">No customer data for this range</td></tr>
+                  ) : (
+                    topCustomers.map((c, idx) => (
+                      <tr key={c.phone} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-5 lg:p-6 font-black text-slate-800 text-lg">{idx + 1}</td>
+                        <td className="p-5 lg:p-6 font-bold text-slate-800">{c.name}</td>
+                        <td className="p-5 lg:p-6 text-slate-600 font-medium">{c.phone}</td>
+                        <td className="p-5 lg:p-6">
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${c.visits > 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>{c.visits}</span>
+                        </td>
+                        <td className="p-5 lg:p-6 font-black text-blue-600 text-lg">{settings.currencySymbol}{c.totalSpent.toFixed(2)}</td>
+                        <td className="p-5 lg:p-6 text-slate-600 font-medium">{format(c.lastVisit, 'MMM dd, yyyy HH:mm')}</td>
                       </tr>
                     ))
                   )}

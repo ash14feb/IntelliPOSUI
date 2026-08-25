@@ -498,7 +498,7 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
               </button>
             )}
             <button
-              onClick={handleCheckout}
+              onClick={() => handleCheckout()}
               disabled={cart.length === 0 || isPrinting || isSavingOrder}
               className={`${settings.enableKot ? 'flex-[2]' : 'flex-1'} py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
                 cart.length === 0 || isSavingOrder

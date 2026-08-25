@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, LoaderCircle, Mail, MapPinned, MessageCircle, Phone, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, LoaderCircle, Mail, MessageCircle, Phone, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { AuthSession } from '../types';
 import { forgotPassword, login, registerTenant, resetPassword } from '../lib/api';
 
@@ -54,12 +54,6 @@ const features = [
     description: 'Add as many staff members as you need with no restrictions.',
     icon: Users,
     color: 'bg-rose-50 text-rose-600'
-  },
-  {
-    title: 'GPS Attendance',
-    description: 'Track staff attendance with GPS location accuracy.',
-    icon: MapPinned,
-    color: 'bg-teal-50 text-teal-600'
   },
   {
     title: 'Secure & Reliable',
@@ -580,7 +574,9 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                           'Bluetooth Printing',
                           'KOT Printing',
                           'Unlimited Users',
-                          'GPS Attendance',
+                          'Staff Logins',
+                          'Customers Info',
+                          'Sales Calendar',
                           'Receipt Customization',
                           'Multi-Category Menu',
                           'Discount & Tax Config',

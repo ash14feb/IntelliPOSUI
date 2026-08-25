@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, ChevronDown, FileText, FolderTree, Key, LayoutDashboard, LoaderCircle, LogOut, Package2, Settings as SettingsIcon, ShoppingCart, TrendingUp, Users, X } from 'lucide-react';
+import { Award, Calendar, ChevronDown, FileText, FolderTree, Key, LayoutDashboard, LoaderCircle, LogOut, Package, Package2, PieChart, Settings as SettingsIcon, ShoppingCart, TrendingUp, Users, X } from 'lucide-react';
 import { AuthUser, Settings } from '../types';
 import { changePassword } from '../lib/api';
 
@@ -38,7 +38,10 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
   const reportItems = [
     { id: 'reports-sales', label: 'Sales Report', icon: TrendingUp },
     { id: 'reports-customers', label: 'Customer Report', icon: Users },
-    { id: 'reports-calendar', label: 'Sales Calendar', icon: Calendar }
+    { id: 'reports-calendar', label: 'Sales Calendar', icon: Calendar },
+    { id: 'reports-items', label: 'Sales by Item', icon: Package },
+    { id: 'reports-payment', label: 'Sales by Payment', icon: PieChart },
+    { id: 'reports-topCustomers', label: 'Top Customers', icon: Award }
   ];
 
   const handleChangePassword = async () => {
@@ -80,12 +83,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
 
       <aside
         className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col h-full transition-transform duration-300 shadow-2xl
+        fixed inset-y-0 left-0 z-50 w-64 text-slate-300 flex flex-col h-full transition-transform duration-300 shadow-2xl sidebar-gradient
         lg:relative lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}
       >
-        <div className="p-4 lg:p-6 flex items-center justify-between border-b border-slate-800">
+        <div className="p-4 lg:p-6 flex items-center justify-between border-b border-white/10">
           <div className="flex flex-col">
             <span className="font-bold text-lg text-white tracking-tight leading-tight">{settings.restaurantName}</span>
             <span className="text-[10px] text-slate-500 font-medium tracking-wide">Powered by Intelli Billing</span>
@@ -107,10 +110,10 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
                   setIsOpen(false);
                 }}
                 className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 cursor-pointer ${
-                  isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'hover:bg-slate-800 hover:text-white'
+                  isActive ? 'bg-white/20 text-white shadow-md backdrop-blur-sm' : 'hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-300'}`} />
                 <span className={`ml-3 font-medium ${isActive ? 'text-white' : 'text-slate-300'}`}>{item.label}</span>
               </button>
             );
@@ -121,18 +124,18 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
               <button
                 onClick={() => setIsReportsOpen(prev => !prev)}
                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 cursor-pointer ${
-                  activeTab.startsWith('reports') ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'hover:bg-slate-800 hover:text-white'
+                  activeTab.startsWith('reports') ? 'bg-white/20 text-white shadow-md backdrop-blur-sm' : 'hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <div className="flex items-center">
-                  <FileText className={`w-5 h-5 shrink-0 ${activeTab.startsWith('reports') ? 'text-white' : 'text-slate-400'}`} />
+                  <FileText className={`w-5 h-5 shrink-0 ${activeTab.startsWith('reports') ? 'text-white' : 'text-slate-300'}`} />
                   <span className={`ml-3 font-medium ${activeTab.startsWith('reports') ? 'text-white' : 'text-slate-300'}`}>Reports</span>
                 </div>
                 <ChevronDown className={`w-4 h-4 transition-transform ${isReportsOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isReportsOpen && (
-                <div className="mt-2 ml-4 space-y-1 border-l border-slate-800 pl-3">
+                <div className="mt-2 ml-4 space-y-1 border-l border-white/20 pl-3">
                   {reportItems.map(item => {
                     const ReportIcon = item.icon;
                     return (
@@ -143,7 +146,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
                           setIsOpen(false);
                         }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                          activeTab === item.id ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                          activeTab === item.id ? 'bg-white/15 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white'
                         }`}
                       >
                         <ReportIcon className="w-4 h-4 shrink-0" />
@@ -157,7 +160,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
           )}
         </nav>
 
-        <div className="border-t border-slate-800 p-4">
+        <div className="border-t border-white/10 p-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-white truncate">{user.full_name}</span>
@@ -166,14 +169,14 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowChangePassword(true)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer shrink-0"
                 title="Change Password"
               >
                 <Key className="w-4 h-4" />
               </button>
               <button
                 onClick={onLogout}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer shrink-0"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5" />

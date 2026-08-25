@@ -474,11 +474,11 @@ export default function App() {
             onNotify={notify}
           />
         )}
-        {!isSuperAdmin && (activeTab === 'reports-sales' || activeTab === 'reports-customers' || activeTab === 'reports-calendar') && (
+        {!isSuperAdmin && (activeTab === 'reports-sales' || activeTab === 'reports-customers' || activeTab === 'reports-calendar' || activeTab === 'reports-items' || activeTab === 'reports-payment' || activeTab === 'reports-topCustomers') && (
           <Reports
             orders={orders}
             settings={settings}
-            mode={activeTab === 'reports-calendar' ? 'calendar' : activeTab === 'reports-customers' ? 'customers' : 'sales'}
+            mode={activeTab === 'reports-calendar' ? 'calendar' : activeTab === 'reports-customers' ? 'customers' : activeTab === 'reports-items' ? 'items' : activeTab === 'reports-payment' ? 'payment' : activeTab === 'reports-topCustomers' ? 'topCustomers' : 'sales'}
             canDeleteSales={isAdmin}
             onDeleteSale={handleDeleteSale}
             onMenuClick={() => setIsSidebarOpen(true)}

@@ -176,3 +176,8 @@ select {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Sidebar Gradient */
+.sidebar-gradient {
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 30%, #312e81 55%, #1e3a5f 80%, #0f172a 100%);
+}
