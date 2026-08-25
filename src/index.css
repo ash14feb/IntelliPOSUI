@@ -148,3 +148,31 @@ select {
 .animate-fade-in {
   animation: fade-in 0.4s ease-out forwards;
 }
+
+/* Customer Name Scroller */
+.customer-scroll {
+  animation: customer-scroll 30s linear infinite;
+}
+
+.customer-scroll:hover {
+  animation-play-state: paused;
+}
+
+@keyframes customer-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Brand Name Scroller */
+.brand-scroll {
+  animation: brand-scroll 25s linear infinite;
+}
+
+.brand-scroll:hover {
+  animation-play-state: paused;
+}
+
+@keyframes brand-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

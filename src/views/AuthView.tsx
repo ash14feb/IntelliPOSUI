@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, LoaderCircle, MapPinned, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Bluetooth, CheckCircle2, Cloud, CreditCard, LoaderCircle, Mail, MapPinned, MessageCircle, Phone, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { AuthSession } from '../types';
 import { forgotPassword, login, registerTenant, resetPassword } from '../lib/api';
 
@@ -7,7 +7,7 @@ interface AuthViewProps {
   onAuthenticated: (session: AuthSession) => void;
 }
 
-type AuthMode = 'login' | 'register' | 'forgotPassword' | 'resetPassword';
+type AuthMode = 'login' | 'register' | 'forgotPassword' | 'resetPassword' | 'careers' | 'pricing';
 
 const quickHighlights = [
   'No App Installation Required',
@@ -69,12 +69,34 @@ const features = [
   }
 ];
 
-const reasons = [
-  'Designed for businesses of every size',
-  'Easy to use with no technical knowledge needed',
-  'Works even on low-end devices',
-  'Affordable for growing businesses',
-  'Fast and reliable performance'
+const WHATSAPP_NUMBER = '919632621345';
+
+const brandNames = [
+  'Chai Point Cafe', 'Spice Route Kitchen', 'The Coffee Bean', 'Urban Tadka', 'Brew & Bites',
+  'Green Leaf Dhaba', 'Sunset Bistro', 'Masala Street', 'Cafe Mocha', 'The Wok House',
+  'Harbour Grill', 'Frost & Flavor', 'The Rolling Pin', 'Saffron Kitchen', 'Bean & Brew',
+  'Coastal Curry', 'Pause Cafe', 'Spice Symphony', 'Nomad Pizza', 'The Lunch Box'
+];
+
+const jobListings = [
+  {
+    code: 'MKT-2026-01',
+    title: 'Marketing Engineer',
+    department: 'Marketing & Growth',
+    experience: '2+ Years',
+    type: 'Full-Time',
+    location: 'Remote / Hybrid',
+    description: 'Drive growth strategies, manage digital campaigns, and work closely with the engineering team to build data-driven marketing pipelines for our billing platform.'
+  },
+  {
+    code: 'AIE-2026-01',
+    title: 'AI Engineer',
+    department: 'Engineering & AI',
+    experience: '2+ Years',
+    type: 'Full-Time',
+    location: 'Remote / Hybrid',
+    description: 'Design and deploy ML models for sales forecasting, receipt OCR, and intelligent business insights. Work with Python, TensorFlow, and cloud-based AI services.'
+  }
 ];
 
 export default function AuthView({ onAuthenticated }: AuthViewProps) {
@@ -204,10 +226,33 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
       <div className="relative">
         <header className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 lg:px-8">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-blue-600">Intelli Billing Software</p>
-            <p className="mt-1 text-sm text-slate-600">Cloud billing made simple for businesses everywhere</p>
+            <p className="text-lg font-extrabold uppercase tracking-[0.2em] text-blue-600 sm:text-xl">Intelli Billing</p>
+            <p className="mt-0.5 text-sm font-medium text-slate-500">Professional Cloud Billing Software</p>
           </div>
           <div className="flex items-center gap-3">
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600"
+            >
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline">Call Now</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => switchMode('careers')}
+              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              Careers
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode('pricing')}
+              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              Pricing
+            </button>
             <button
               type="button"
               onClick={() => switchMode('register')}
@@ -467,10 +512,160 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
                   </p>
                 </form>
               )}
+
+              {mode === 'careers' && (
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-blue-600">Careers</p>
+                    <h2 className="mt-3 text-2xl font-black text-slate-900">Join Our Team</h2>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      We are building the future of cloud billing. If you are passionate about technology, we would love to hear from you.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    {jobListings.map((job) => (
+                      <div key={job.code} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">{job.title}</h3>
+                            <p className="text-sm font-medium text-blue-600">{job.department}</p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200">{job.code}</span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{job.experience}</span>
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{job.type}</span>
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{job.location}</span>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-slate-500">{job.description}</p>
+                        <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-semibold text-emerald-700 flex items-center gap-2">
+                          <Mail className="h-4 w-4 shrink-0" />
+                          To apply, send your CV with the job code <span className="font-black">{job.code}</span> in the subject to <span className="font-black">careers@itsreviver.com</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {mode === 'pricing' && (
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-blue-600">Pricing</p>
+                    <h2 className="mt-3 text-2xl font-black text-slate-900">Simple, transparent pricing</h2>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">Choose the plan that fits your business. Billed annually. Printers sold separately.</p>
+                  </div>
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    {/* Intelli Lite */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Intelli Lite</p>
+                      <div className="mt-3 flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-slate-900">Rs.69</span>
+                        <span className="text-sm font-semibold text-slate-500">/month</span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">Billed annually</p>
+                      <button
+                        type="button"
+                        onClick={() => switchMode('register')}
+                        className="mt-4 w-full rounded-xl border-2 border-blue-600 bg-white py-2.5 text-sm font-bold text-blue-600 transition hover:bg-blue-50"
+                      >
+                        Start Free Trial
+                      </button>
+                      <div className="mt-4 space-y-2.5">
+                        {[
+                          'Smart Billing',
+                          'Cloud Access',
+                          'Live Reports & Analytics',
+                          'Bluetooth Printing',
+                          'KOT Printing',
+                          'Unlimited Users',
+                          'GPS Attendance',
+                          'Receipt Customization',
+                          'Multi-Category Menu',
+                          'Discount & Tax Config',
+                          'Email Support'
+                        ].map(m => (
+                          <div key={m} className="flex items-center gap-2 text-sm text-slate-700">
+                            <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0" />
+                            {m}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Intelli Pro */}
+                    <div className="relative rounded-2xl border-2 border-blue-600 bg-white p-5 shadow-lg shadow-blue-100">
+                      <span className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">Most Popular</span>
+                      <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Intelli Pro</p>
+                      <div className="mt-3 flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-slate-900">Rs.99</span>
+                        <span className="text-sm font-semibold text-slate-500">/month</span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">Billed annually</p>
+                      <button
+                        type="button"
+                        onClick={() => switchMode('register')}
+                        className="mt-4 w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
+                      >
+                        Start Free Trial
+                      </button>
+                      <div className="mt-4 space-y-2.5">
+                        {[
+                          'Everything in Lite, plus:',
+                          'Staff Attendance Module',
+                          'QR Menu Module',
+                          'Table Ordering by Customers',
+                          'Positive Review QR',
+                          'Advanced Sales Analytics',
+                          'Customer Insights Dashboard',
+                          'Priority Support'
+                        ].map(m => (
+                          <div key={m} className={`flex items-center gap-2 text-sm ${m.startsWith('Everything') ? 'font-bold text-blue-700' : 'text-slate-700'}`}>
+                            <CheckCircle2 className={`h-4 w-4 shrink-0 ${m.startsWith('Everything') ? 'text-blue-600' : 'text-emerald-500'}`} />
+                            {m}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs font-semibold text-center text-slate-400">* Printers are sold separately and are not included in any plan.</p>
+                </div>
+              )}
             </div>
           </section>
         </section>
 
+        {/* Banner */}
+        <section className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+          <div className="overflow-hidden rounded-[2rem] shadow-[0_20px_60px_rgba(148,163,184,0.18)]">
+            <img
+              src="https://i.ibb.co/k2bPy5Vx/81e0b00d-d27c-4586-a80b-8fe6c4f524a3.png"
+              alt="Intelli Billing Banner"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+        </section>
+
+        {/* Trusted by Brands */}
+        <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+          <div className="text-center mb-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Trusted by Leading Brands</p>
+            <h2 className="mt-3 text-2xl font-black text-slate-900 lg:text-3xl">Powering businesses across India</h2>
+          </div>
+          <div className="overflow-hidden relative">
+            <div className="brand-scroll flex gap-12 whitespace-nowrap items-center">
+              {[...brandNames, ...brandNames].map((brand, i) => (
+                <span key={i} className="text-2xl font-extrabold text-slate-300 tracking-tight sm:text-3xl lg:text-4xl select-none">
+                  {brand}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
         <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-20">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Features</p>
@@ -493,44 +688,6 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-            <div className="rounded-[2rem] border border-white/80 bg-[linear-gradient(135deg,#ecfeff_0%,#f0fdf4_100%)] p-8 shadow-[0_22px_70px_rgba(167,243,208,0.22)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600">Pricing</p>
-              <h2 className="mt-4 text-4xl font-black text-slate-900">Just Rs.99/month</h2>
-              <p className="mt-4 text-base leading-7 text-slate-600">No hidden charges. No complicated plans.</p>
-              <div className="mt-6 space-y-3">
-                {['All Features Included', 'Unlimited Users', 'Cloud Access', 'Support Included'].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => switchMode('register')}
-                className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-600"
-              >
-                Start Free 7-Day Trial Now
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/80 bg-white/80 p-8 shadow-[0_18px_60px_rgba(148,163,184,0.16)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Why Choose Intelli Billing?</p>
-              <h2 className="mt-4 text-3xl font-black text-slate-900">Built to simplify daily business operations without adding complexity</h2>
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                {reasons.map((reason) => (
-                  <div key={reason} className="rounded-3xl border border-slate-100 bg-slate-50 px-5 py-4 text-sm leading-7 text-slate-700">
-                    {reason}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-16">
           <div className="rounded-[2.25rem] border border-white/80 bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_35%,#fdf2f8_100%)] px-6 py-10 text-center shadow-[0_28px_90px_rgba(148,163,184,0.18)] lg:px-12">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-600">Ready To Simplify Your Business?</p>
@@ -546,13 +703,15 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
               >
                 Register Now
               </button>
-              <button
-                type="button"
-                onClick={() => switchMode('register')}
-                className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 text-sm font-bold text-white transition hover:bg-emerald-600"
               >
-                Try Free for 7 Days
-              </button>
+                <MessageCircle className="h-4 w-4" />
+                Chat on WhatsApp
+              </a>
             </div>
           </div>
         </section>
@@ -561,6 +720,8 @@ export default function AuthView({ onAuthenticated }: AuthViewProps) {
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex gap-5">
               <span>About Us</span>
+              <button onClick={() => switchMode('pricing')} className="hover:text-slate-700 transition">Pricing</button>
+              <button onClick={() => switchMode('careers')} className="hover:text-slate-700 transition">Careers</button>
               <span>Contact</span>
               <span>Privacy Policy</span>
               <span>Terms & Conditions</span>
