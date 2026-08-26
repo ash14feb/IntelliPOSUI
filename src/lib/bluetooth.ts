@@ -3,7 +3,7 @@ import { PrinterDevice } from './printerTypes';
 declare global {
   interface Window {
     AndroidNative?: {
-      printReceipt: (data: string, type: 'bluetooth' | 'usb') => void;
+      printReceipt: (data: string, type: string) => void;
       connectBluetooth: () => Promise<boolean>;
       disconnectBluetooth: () => void;
       isBluetoothConnected: () => boolean;
@@ -23,11 +23,26 @@ const PRINTER_SERVICES = [
   '0000ae30-0000-1000-8000-00805f9b34fb',
 ];
 
+function getNativeBridge() {
+  try {
+    return (window as any).AndroidNative || null;
+  } catch {
+    return null;
+  }
+}
+
+function toBase64(uint8Array: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < uint8Array.length; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
+
 export class BluetoothPrinter implements PrinterDevice {
   device: BluetoothDevice | null = null;
   server: BluetoothRemoteGATTServer | null = null;
   characteristic: BluetoothRemoteGATTCharacteristic | null = null;
-  private isNative = !!(window.AndroidNative);
 
   private async findWritableCharacteristic(services: BluetoothRemoteGATTService[]) {
     for (const service of services) {
@@ -41,16 +56,16 @@ export class BluetoothPrinter implements PrinterDevice {
           }
         }
       } catch (error) {
-        console.log('Skipping service while searching for writable characteristic:', error);
+        console.log('Skipping service:', error);
       }
     }
-
     return false;
   }
 
   async connect() {
-    if (this.isNative) {
-      const connected = await window.AndroidNative!.connectBluetooth();
+    const native = getNativeBridge();
+    if (native && native.connectBluetooth) {
+      const connected = await native.connectBluetooth();
       if (!connected) {
         throw new Error('Failed to connect to Bluetooth printer via native bridge.');
       }
@@ -72,20 +87,18 @@ export class BluetoothPrinter implements PrinterDevice {
       }
 
       this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
-
       this.server = await this.device.gatt.connect();
-      const connectedServer = this.server;
 
-      if (!connectedServer) {
+      if (!this.server) {
         throw new Error('Failed to connect to the Bluetooth printer.');
       }
 
       const knownServices: BluetoothRemoteGATTService[] = [];
       for (const serviceUuid of PRINTER_SERVICES) {
         try {
-          knownServices.push(await connectedServer.getPrimaryService(serviceUuid));
+          knownServices.push(await this.server.getPrimaryService(serviceUuid));
         } catch (e) {
-          console.log(`Service ${serviceUuid} not found or no writable characteristic.`);
+          // service not found
         }
       }
 
@@ -93,14 +106,14 @@ export class BluetoothPrinter implements PrinterDevice {
         return true;
       }
 
-      if (connectedServer.connected && typeof connectedServer.getPrimaryServices === 'function') {
-        const allServices = await connectedServer.getPrimaryServices();
+      if (this.server.connected && typeof this.server.getPrimaryServices === 'function') {
+        const allServices = await this.server.getPrimaryServices();
         if (await this.findWritableCharacteristic(allServices)) {
           return true;
         }
       }
 
-      throw new Error('Could not find a writable characteristic on this device. Make sure it is a supported printer.');
+      throw new Error('Could not find a writable characteristic on this device.');
     } catch (error) {
       this.disconnect();
       throw error;
@@ -108,9 +121,10 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   async print(data: Uint8Array) {
-    if (this.isNative) {
-      const base64 = btoa(String.fromCharCode(...data));
-      window.AndroidNative!.printReceipt(base64, 'bluetooth');
+    const native = getNativeBridge();
+    if (native && native.printReceipt) {
+      const base64 = toBase64(data);
+      native.printReceipt(base64, 'bluetooth');
       return;
     }
 
@@ -119,7 +133,6 @@ export class BluetoothPrinter implements PrinterDevice {
     }
 
     const CHUNK_SIZE = 100;
-    
     for (let i = 0; i < data.length; i += CHUNK_SIZE) {
       const chunk = data.slice(i, i + CHUNK_SIZE);
       if (this.characteristic.properties.writeWithoutResponse) {
@@ -132,8 +145,9 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   disconnect() {
-    if (this.isNative) {
-      window.AndroidNative!.disconnectBluetooth();
+    const native = getNativeBridge();
+    if (native && native.disconnectBluetooth) {
+      native.disconnectBluetooth();
       return;
     }
 
@@ -153,8 +167,9 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   isConnected() {
-    if (this.isNative) {
-      return window.AndroidNative!.isBluetoothConnected();
+    const native = getNativeBridge();
+    if (native && native.isBluetoothConnected) {
+      return native.isBluetoothConnected();
     }
     return this.device !== null && this.device.gatt?.connected === true && this.characteristic !== null;
   }
