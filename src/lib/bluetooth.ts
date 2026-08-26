@@ -1,21 +1,33 @@
 import { PrinterDevice } from './printerTypes';
 
+declare global {
+  interface Window {
+    AndroidNative?: {
+      printReceipt: (data: string, type: 'bluetooth' | 'usb') => void;
+      connectBluetooth: () => Promise<boolean>;
+      disconnectBluetooth: () => void;
+      isBluetoothConnected: () => boolean;
+    };
+  }
+}
+
 const PRINTER_SERVICES = [
-  '000018f0-0000-1000-8000-00805f9b34fb', // Standard printer service
-  'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common generic
-  '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Another common generic
-  '0000ffe0-0000-1000-8000-00805f9b34fb', // Common BLE serial/thermal printer service
-  '0000ffe5-0000-1000-8000-00805f9b34fb', // Common BLE serial/thermal printer service
-  '0000fff0-0000-1000-8000-00805f9b34fb', // Common BLE serial/thermal printer service
-  '0000ff00-0000-1000-8000-00805f9b34fb', // Common BLE printer bridge service
-  '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service used by many BLE printers
-  '0000ae30-0000-1000-8000-00805f9b34fb', // Common BLE printer service
+  '000018f0-0000-1000-8000-00805f9b34fb',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+  '0000ffe0-0000-1000-8000-00805f9b34fb',
+  '0000ffe5-0000-1000-8000-00805f9b34fb',
+  '0000fff0-0000-1000-8000-00805f9b34fb',
+  '0000ff00-0000-1000-8000-00805f9b34fb',
+  '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+  '0000ae30-0000-1000-8000-00805f9b34fb',
 ];
 
 export class BluetoothPrinter implements PrinterDevice {
   device: BluetoothDevice | null = null;
   server: BluetoothRemoteGATTServer | null = null;
   characteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private isNative = !!(window.AndroidNative);
 
   private async findWritableCharacteristic(services: BluetoothRemoteGATTService[]) {
     for (const service of services) {
@@ -37,6 +49,14 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   async connect() {
+    if (this.isNative) {
+      const connected = await window.AndroidNative!.connectBluetooth();
+      if (!connected) {
+        throw new Error('Failed to connect to Bluetooth printer via native bridge.');
+      }
+      return true;
+    }
+
     if (!navigator.bluetooth) {
       throw new Error('Web Bluetooth API is not available in this browser.');
     }
@@ -88,12 +108,16 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   async print(data: Uint8Array) {
+    if (this.isNative) {
+      const base64 = btoa(String.fromCharCode(...data));
+      window.AndroidNative!.printReceipt(base64, 'bluetooth');
+      return;
+    }
+
     if (!this.characteristic) {
       throw new Error('Printer is not connected.');
     }
 
-    // Bluetooth LE has a maximum packet size (MTU). We need to chunk the data.
-    // A safe chunk size is usually 20-512 bytes. We'll use 100 to be safe.
     const CHUNK_SIZE = 100;
     
     for (let i = 0; i < data.length; i += CHUNK_SIZE) {
@@ -103,12 +127,16 @@ export class BluetoothPrinter implements PrinterDevice {
       } else {
         await this.characteristic.writeValue(chunk);
       }
-      // Small delay to prevent buffer overflow on the printer
       await new Promise(resolve => setTimeout(resolve, 10));
     }
   }
 
   disconnect() {
+    if (this.isNative) {
+      window.AndroidNative!.disconnectBluetooth();
+      return;
+    }
+
     if (this.device && this.device.gatt?.connected) {
       this.device.gatt.disconnect();
     }
@@ -125,6 +153,9 @@ export class BluetoothPrinter implements PrinterDevice {
   }
 
   isConnected() {
+    if (this.isNative) {
+      return window.AndroidNative!.isBluetoothConnected();
+    }
     return this.device !== null && this.device.gatt?.connected === true && this.characteristic !== null;
   }
 
