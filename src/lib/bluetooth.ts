@@ -5,8 +5,12 @@ declare global {
     AndroidNative?: {
       printReceipt: (data: string, type: string) => void;
       connectBluetooth: () => Promise<boolean>;
+      connectBluetoothDevice: (address: string) => Promise<boolean>;
       disconnectBluetooth: () => void;
       isBluetoothConnected: () => boolean;
+      showToast: (message: string) => void;
+      getBaseUrl: () => string;
+      vibrate: (milliseconds: number) => void;
     };
   }
 }
@@ -29,6 +33,10 @@ function getNativeBridge() {
   } catch {
     return null;
   }
+}
+
+export function isAndroidWebView(): boolean {
+  return getNativeBridge() !== null;
 }
 
 function toBase64(uint8Array: Uint8Array): string {
@@ -172,6 +180,64 @@ export class BluetoothPrinter implements PrinterDevice {
       return native.isBluetoothConnected();
     }
     return this.device !== null && this.device.gatt?.connected === true && this.characteristic !== null;
+  }
+
+  async connectToDevice(address: string) {
+    const native = getNativeBridge();
+    if (native && native.connectBluetoothDevice) {
+      const connected = await native.connectBluetoothDevice(address);
+      if (!connected) {
+        throw new Error('Failed to connect to Bluetooth printer via native bridge.');
+      }
+      return true;
+    }
+
+    if (!navigator.bluetooth) {
+      throw new Error('Web Bluetooth API is not available in this browser.');
+    }
+
+    try {
+      this.device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: PRINTER_SERVICES,
+      });
+
+      if (!this.device.gatt) {
+        throw new Error('GATT server not available on this device.');
+      }
+
+      this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
+      this.server = await this.device.gatt.connect();
+
+      if (!this.server) {
+        throw new Error('Failed to connect to the Bluetooth printer.');
+      }
+
+      const knownServices: BluetoothRemoteGATTService[] = [];
+      for (const serviceUuid of PRINTER_SERVICES) {
+        try {
+          knownServices.push(await this.server.getPrimaryService(serviceUuid));
+        } catch (e) {
+          // service not found
+        }
+      }
+
+      if (await this.findWritableCharacteristic(knownServices)) {
+        return true;
+      }
+
+      if (this.server.connected && typeof this.server.getPrimaryServices === 'function') {
+        const allServices = await this.server.getPrimaryServices();
+        if (await this.findWritableCharacteristic(allServices)) {
+          return true;
+        }
+      }
+
+      throw new Error('Could not find a writable characteristic on this device.');
+    } catch (error) {
+      this.disconnect();
+      throw error;
+    }
   }
 
   getConnectionLabel() {
