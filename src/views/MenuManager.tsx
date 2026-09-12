@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Category, MenuItem, Settings } from '../types';
-import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil, ScanLine } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil, ScanLine, Package, ArrowLeft } from 'lucide-react';
 import { uploadToImgBB, UploadStatus } from '../lib/imgbb';
 import BarcodeScanner from '../components/BarcodeScanner';
+import { formatPrice } from '../lib/currency';
 
 interface MenuManagerProps {
   menuItems: MenuItem[];
@@ -164,6 +165,17 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
       </div>
 
       <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100 mb-10">
+        {editingItemId && (
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="mb-6 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to inventory
+          </button>
+        )}
+        {!editingItemId && (
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_auto] gap-4 mb-8">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Add Category</label>
@@ -188,6 +200,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
             Add Category
           </button>
         </div>
+        )}
 
         <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-800">{editingItemId ? 'Edit Item' : 'Add New Item'}</h2>
@@ -300,6 +313,7 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
         </div>
       </div>
 
+      {!editingItemId && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
         {menuItems.map(item => {
           const outOfStock = settings.enableStock && !settings.allowSaleWhenOutOfStock && (item.stock ?? 0) <= 0;
@@ -314,38 +328,46 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute bottom-3 left-3 rounded-lg bg-slate-900/85 px-2 py-1 text-sm font-black text-white backdrop-blur-sm">
+                {formatPrice(settings, item.price)}
+              </div>
               <button
                 onClick={() => handleEditStart(item)}
                 disabled={isSaving}
-                className="absolute top-4 left-4 p-2.5 bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-blue-600 hover:text-white rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Edit item"
+                className="absolute top-4 left-4 p-2.5 bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-blue-600 hover:text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Pencil className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleRemove(item.id)}
                 disabled={isSaving}
-                className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete item"
+                className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5">
-              <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">{item.category}</div>
-              <h3 className="font-bold text-slate-800 text-lg leading-tight">{item.name}</h3>
-              <p className="text-blue-600 font-black mt-2 text-xl">{settings.currencySymbol}{item.price.toFixed(2)}</p>
-              {settings.enableStock && (
-                <p className={`mt-1 text-xs font-bold ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                  Stock: {item.stock ?? 0}{(item.stock ?? 0) <= 0 ? ' (Out of stock)' : ''}
-                </p>
-              )}
+            <div className="px-4 py-2">
+              <div className="text-[11px] font-bold text-blue-500 uppercase tracking-wider">{item.category}</div>
+              <div className="flex items-center justify-between gap-1.5">
+                <h3 className="font-bold text-slate-800 uppercase text-sm leading-tight truncate flex-1">{item.name}</h3>
+                {settings.enableStock && (
+                  <span title={`Stock: ${item.stock ?? 0}`} className={`flex shrink-0 items-center gap-1 text-[11px] font-bold ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    <Package className="h-3.5 w-3.5" />
+                    {item.stock ?? 0}
+                  </span>
+                )}
+              </div>
               {settings.enableBarcode && item.barcode && (
-                <p className="mt-1 text-xs font-medium text-slate-500">Barcode: {item.barcode}</p>
+                <p className="text-[11px] font-medium text-slate-500">Barcode: {item.barcode}</p>
               )}
             </div>
           </div>
           );
         })}
       </div>
+      )}
       {showScanner && (
         <BarcodeScanner
           onDetected={(code) => { setNewItem(prev => ({ ...prev, barcode: code })); setShowScanner(false); onNotify(`Barcode scanned: ${code}`, 'success'); }}

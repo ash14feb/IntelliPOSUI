@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { MenuItem, CartItem, Settings, Order, PaymentMode } from '../types';
 import { printReceipt, printKOT } from '../lib/printReceipt';
-import { Plus, Minus, Trash2, Printer, Bluetooth, BluetoothOff, AlertCircle, ShoppingCart, Menu, FileText, Search, X } from 'lucide-react';
+import { Plus, Minus, Trash2, Printer, Bluetooth, BluetoothOff, AlertCircle, ShoppingCart, Menu, FileText, Search, X, Package } from 'lucide-react';
 import { PrinterDevice } from '../lib/printerTypes';
+import { formatPrice } from '../lib/currency';
 
 interface POSProps {
   menuItems: MenuItem[];
@@ -333,15 +334,20 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                         <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
                       )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                      <div className="absolute bottom-2 left-2 rounded-lg bg-slate-900/85 px-2 py-1 text-sm font-black text-white backdrop-blur-sm">
+                        {formatPrice(settings, item.price)}
+                      </div>
                     </div>
-                    <div className="p-4 flex-1 flex flex-col justify-between">
-                      <h3 className="font-semibold text-slate-800 line-clamp-2 leading-tight">{item.name}</h3>
-                      <p className="text-blue-600 font-bold mt-2 text-lg">{settings.currencySymbol}{item.price.toFixed(2)}</p>
-                      {settings.enableStock && (
-                        <p className={`text-xs font-bold mt-1 ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                          {out ? 'Out of stock' : `Stock: ${item.stock ?? 0}`}
-                        </p>
-                      )}
+                    <div className="px-2.5 py-1.5 flex-1">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <h3 className="font-semibold text-slate-800 uppercase text-[13px] leading-tight truncate flex-1">{item.name}</h3>
+                        {settings.enableStock && (
+                          <span title={out ? 'Out of stock' : `Stock: ${item.stock ?? 0}`} className={`flex shrink-0 items-center gap-1 text-[11px] font-bold ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                            <Package className="h-3.5 w-3.5" />
+                            {out ? '0' : (item.stock ?? 0)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 </div>
