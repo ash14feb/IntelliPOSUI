@@ -3,6 +3,7 @@ import { LoaderCircle } from 'lucide-react';
 import { AuthSession, Category, MenuItem, Order, RegisteredStore, Settings, StoreUser } from './types';
 import Sidebar from './components/Sidebar';
 import NotificationToast, { NotificationToastState } from './components/NotificationToast';
+import InstallPrompt from './components/InstallPrompt';
 import POS from './views/POS';
 import SettingsView from './views/SettingsView';
 import MenuManager from './views/MenuManager';
@@ -387,7 +388,12 @@ export default function App() {
   };
 
   if (!session) {
-    return <AuthView onAuthenticated={handleAuthenticated} />;
+    return (
+      <>
+        <AuthView onAuthenticated={handleAuthenticated} />
+        <InstallPrompt onNotify={notify} />
+      </>
+    );
   }
 
   if (isLoading) {
@@ -406,6 +412,7 @@ export default function App() {
         <div className="pointer-events-none absolute right-4 top-20 z-40 w-full max-w-sm">
           <NotificationToast notification={notification} />
         </div>
+        <InstallPrompt onNotify={notify} />
 
         {loadError && (
           <div className="absolute top-4 left-4 right-28 z-20 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 shadow-sm">
