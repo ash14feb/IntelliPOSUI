@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from "react";
-import { LoaderCircle, Menu, Plus, Armchair, Link2, Copy, Check, ExternalLink, Trash2 } from "lucide-react";
+﻿import { useEffect, useRef, useState } from "react";
+import { LoaderCircle, Menu, Plus, Armchair, Link2, Copy, Check, ExternalLink, Trash2, QrCode, Download, X } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { fetchTables, createTable, updateTableStatus, deleteTable } from "../lib/api";
 
 export function tableMenuUrl(menuCode: string): string {
@@ -14,6 +15,9 @@ export default function TablesView({ onMenuClick, onNotify }: { onMenuClick: () 
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [qrTable, setQrTable] = useState<any | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
     try {
@@ -89,6 +93,48 @@ export default function TablesView({ onMenuClick, onNotify }: { onMenuClick: () 
     setTimeout(() => setCopiedId(cur => (cur === t.id ? null : cur)), 2000);
   };
 
+  const handleDownloadQr = async () => {
+    if (!qrTable?.menu_code || !qrRef.current) return;
+    try {
+      setIsDownloading(true);
+      const svg = qrRef.current.querySelector('svg');
+      if (!svg) throw new Error('QR code not ready');
+      const xml = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      try {
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Unable to render QR code'));
+          img.src = svgUrl;
+        });
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Unable to render QR code');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `table-${qrTable.table_no}-qr.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        onNotify('QR code downloaded', 'success');
+      } finally {
+        URL.revokeObjectURL(svgUrl);
+      }
+    } catch (e: any) {
+      onNotify(e?.message || 'Unable to download QR code', 'error');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const inputCls = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium";
   const labelCls = "block text-sm font-semibold text-slate-700 mb-2";
 
@@ -142,6 +188,9 @@ export default function TablesView({ onMenuClick, onNotify }: { onMenuClick: () 
                         {copiedId === t.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         {copiedId === t.id ? 'Copied' : 'Copy Link'}
                       </button>
+                      <button onClick={() => setQrTable(t)} title="Show QR code" className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 text-xs font-bold transition-colors">
+                        <QrCode className="w-4 h-4" /> QR Code
+                      </button>
                       <a href={tableMenuUrl(t.menu_code)} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100">
                         <ExternalLink className="w-4 h-4" /> Open
                       </a>
@@ -153,6 +202,31 @@ export default function TablesView({ onMenuClick, onNotify }: { onMenuClick: () 
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {qrTable?.menu_code && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm" onClick={() => setQrTable(null)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-lg font-black text-slate-800">Table {qrTable.table_no}</h3>
+              <button onClick={() => setQrTable(null)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">Scan to open this table's menu</p>
+            <div ref={qrRef} className="flex justify-center rounded-2xl border border-slate-200 bg-white p-4">
+              <QRCodeSVG value={tableMenuUrl(qrTable.menu_code)} size={220} level="M" />
+            </div>
+            <button
+              onClick={handleDownloadQr}
+              disabled={isDownloading}
+              className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 text-sm font-bold transition-colors disabled:opacity-60"
+            >
+              {isDownloading ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              {isDownloading ? 'Preparing...' : 'Download QR Code'}
+            </button>
+          </div>
         </div>
       )}
     </div>
