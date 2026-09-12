@@ -9,25 +9,28 @@ export default function PublicMenuView({ code }: { code: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [category, setCategory] = useState('All');
   const [query, setQuery] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const menu = await fetchPublicMenu(code);
         if (mounted) {
           setData(menu);
           setError(null);
         }
       } catch (e: any) {
+        console.error('Public menu load failed:', e);
         if (mounted) setError(e?.message || 'Unable to load menu');
       } finally {
         if (mounted) setIsLoading(false);
       }
     })();
     return () => { mounted = false; };
-  }, [code]);
+  }, [code, attempt]);
 
   const categories = useMemo(() => {
     if (!data) return ['All'];
@@ -55,7 +58,13 @@ export default function PublicMenuView({ code }: { code: string }) {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3 p-10 text-center">
         <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center"><UtensilsCrossed className="w-8 h-8" /></div>
         <p className="font-bold text-slate-800 text-lg">Menu link not found</p>
-        <p className="text-sm text-slate-500">{error || 'Please ask the staff for a valid QR code or link.'}</p>
+        <p className="text-sm text-slate-500 max-w-sm">{error || 'Please ask the staff for a valid QR code or link.'}</p>
+        <button
+          onClick={() => setAttempt(a => a + 1)}
+          className="mt-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }

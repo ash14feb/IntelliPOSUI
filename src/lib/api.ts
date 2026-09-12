@@ -282,12 +282,25 @@ export interface PublicMenuData {
   currencySymbol: string;
   menuItems: MenuItem[];
 }
-export async function fetchPublicMenu(code: string): Promise<PublicMenuData> {
+export async function fetchPublicMenu(code: string, timeoutMs = 20000): Promise<PublicMenuData> {
   const base = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
-  const response = await fetch(`${base}/api/tables/menu/${encodeURIComponent(code)}`);
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(payload?.message || 'Unable to load menu');
-  return payload.data as PublicMenuData;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${base}/api/tables/menu/${encodeURIComponent(code)}`, {
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.success) throw new Error(payload?.message || `Unable to load menu (server ${response.status})`);
+    if (!payload?.data) throw new Error('Unable to load menu (empty response)');
+    return payload.data as PublicMenuData;
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw new Error('Menu request timed out. Check your connection and retry.');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 export async function fetchFloors(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/tables/floors'); return r.data; }
 export async function createFloor(name: string): Promise<void> { await request('/api/tables/floors', { method: 'POST', body: JSON.stringify({ name }) }); }
