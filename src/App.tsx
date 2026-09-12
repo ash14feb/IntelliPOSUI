@@ -54,7 +54,10 @@ const DEFAULT_SETTINGS: Settings = {
   receiptHeader: 'Welcome to Intelli Billing!',
   receiptFooter: 'Thank you for visiting!',
   orderAfterBill: false,
-  businessType: 'FOOD'
+  businessType: 'FOOD',
+  enableBarcode: false,
+  enableStock: false,
+  allowSaleWhenOutOfStock: true
 };
 
 export default function App() {
@@ -145,7 +148,7 @@ export default function App() {
         const bootstrap = await fetchBootstrap();
         if (!isMounted) return;
 
-        setSettings(bootstrap.settings);
+        setSettings({ ...DEFAULT_SETTINGS, ...bootstrap.settings } as Settings);
         setMenuItems(bootstrap.menuItems);
         setOrders(bootstrap.orders);
         setCategories(bootstrap.categories);
@@ -291,8 +294,9 @@ export default function App() {
   const handleSaveSettings = async (nextSettings: Settings) => {
     try {
       setIsSavingSettings(true);
+      // All settings (incl. inventory flags) are saved to the database via API.
       const savedSettings = await savePosSettings(nextSettings);
-      setSettings(savedSettings);
+      setSettings({ ...DEFAULT_SETTINGS, ...savedSettings } as Settings);
       printer.syncSettings(savedSettings);
       setLoadError(null);
     } catch (error) {

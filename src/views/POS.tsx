@@ -38,6 +38,9 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
     return ['All', ...Array.from(cats)];
   }, [menuItems]);
 
+  const isOutOfStock = (item: MenuItem) =>
+    !!settings.enableStock && !settings.allowSaleWhenOutOfStock && (item.stock ?? 0) <= 0;
+
   const filteredItems = useMemo(() => {
     let items = menuItems;
     if (selectedCategory !== 'All') {
@@ -45,12 +48,16 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      items = items.filter(item => item.name.toLowerCase().includes(q));
+      items = items.filter(item => item.name.toLowerCase().includes(q) || (item.barcode || '').toLowerCase().includes(q));
     }
     return items;
   }, [menuItems, selectedCategory, searchQuery]);
 
   const addToCart = (item: MenuItem) => {
+    if (isOutOfStock(item)) {
+      onNotify(`${item.name} is out of stock`, 'error');
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -293,10 +300,11 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
             {filteredItems.map(item => {
               const cartItem = cart.find(i => i.id === item.id);
+              const out = isOutOfStock(item);
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-slate-200 text-left group flex flex-col h-full relative"
+                  className={`bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-slate-200 text-left group flex flex-col h-full relative ${out ? 'opacity-50 grayscale' : ''}`}
                 >
                   {cartItem && (
                     <>
@@ -329,6 +337,11 @@ export default function POS({ menuItems, nextInvoiceNumber, settings, printer, i
                     <div className="p-4 flex-1 flex flex-col justify-between">
                       <h3 className="font-semibold text-slate-800 line-clamp-2 leading-tight">{item.name}</h3>
                       <p className="text-blue-600 font-bold mt-2 text-lg">{settings.currencySymbol}{item.price.toFixed(2)}</p>
+                      {settings.enableStock && (
+                        <p className={`text-xs font-bold mt-1 ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                          {out ? 'Out of stock' : `Stock: ${item.stock ?? 0}`}
+                        </p>
+                      )}
                     </div>
                   </button>
                 </div>

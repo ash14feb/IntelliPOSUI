@@ -11,6 +11,9 @@ export interface Settings {
   receiptFooter: string;
   orderAfterBill: boolean;
   businessType: 'FOOD' | 'RETAIL' | 'SERVICES' | 'GENERAL';
+  enableBarcode: boolean;
+  enableStock: boolean;
+  allowSaleWhenOutOfStock: boolean;
 }
 
 export interface Floor { id: number; name: string; sort_order?: number; }
@@ -30,6 +33,8 @@ export interface MenuItem {
   price: number;
   image: string;
   category: string;
+  barcode?: string;
+  stock?: number;
 }
 
 export interface CartItem extends MenuItem {

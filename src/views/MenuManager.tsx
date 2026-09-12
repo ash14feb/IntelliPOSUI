@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Category, MenuItem, Settings } from '../types';
-import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil, ScanLine } from 'lucide-react';
 import { uploadToImgBB, UploadStatus } from '../lib/imgbb';
+import BarcodeScanner from '../components/BarcodeScanner';
 
 interface MenuManagerProps {
   menuItems: MenuItem[];
@@ -20,8 +21,11 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
     name: '',
     price: 0,
     image: '',
-    category: categories[0]?.name || 'General'
+    category: categories[0]?.name || 'General',
+    barcode: '',
+    stock: 0
   });
+  const [showScanner, setShowScanner] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -76,9 +80,11 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
         name: newItem.name,
         price: Number(newItem.price),
         image: newItem.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80',
-        category: newItem.category || 'General'
+        category: newItem.category || 'General',
+        ...(settings.enableBarcode ? { barcode: newItem.barcode?.trim() || '' } : {}),
+        ...(settings.enableStock ? { stock: Number(newItem.stock ?? 0) } : {})
       });
-      setNewItem({ name: '', price: 0, image: '', category: categories[0]?.name || 'General' });
+      setNewItem({ name: '', price: 0, image: '', category: categories[0]?.name || 'General', barcode: '', stock: 0 });
       setUploadStatus(null);
     } catch (error: any) {
       alert(error.message || 'Unable to add item');
@@ -93,14 +99,16 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
       name: item.name,
       price: item.price,
       image: item.image,
-      category: item.category
+      category: item.category,
+      barcode: item.barcode || '',
+      stock: item.stock ?? 0
     });
     setUploadStatus(null);
   };
 
   const handleCancelEdit = () => {
     setEditingItemId(null);
-    setNewItem({ name: '', price: 0, image: '', category: categories[0]?.name || 'General' });
+    setNewItem({ name: '', price: 0, image: '', category: categories[0]?.name || 'General', barcode: '', stock: 0 });
     setUploadStatus(null);
   };
 
@@ -113,7 +121,9 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
         name: newItem.name,
         price: Number(newItem.price),
         image: newItem.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80',
-        category: newItem.category || 'General'
+        category: newItem.category || 'General',
+        ...(settings.enableBarcode ? { barcode: newItem.barcode?.trim() || '' } : {}),
+        ...(settings.enableStock ? { stock: Number(newItem.stock ?? 0) } : {})
       };
 
       if (editingItemId) {
@@ -226,6 +236,41 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               ))}
             </select>
           </div>
+          {settings.enableBarcode && (
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Barcode</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={newItem.barcode || ''}
+                  onChange={e => setNewItem({ ...newItem, barcode: e.target.value })}
+                  className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                  placeholder="Scan or type barcode"
+                />
+                <button
+                  type="button"
+                  title="Scan barcode with camera"
+                  onClick={() => setShowScanner(true)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  <ScanLine className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+          {settings.enableStock && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Stock Qty</label>
+              <input
+                type="number"
+                min={0}
+                value={newItem.stock ?? ''}
+                onChange={e => setNewItem({ ...newItem, stock: Math.max(0, parseInt(e.target.value) || 0) })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                placeholder="0"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Item Image</label>
             <label className="flex items-center gap-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-white transition-all font-medium text-slate-700">
@@ -256,8 +301,10 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
-        {menuItems.map(item => (
-          <div key={item.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md transition-all">
+        {menuItems.map(item => {
+          const outOfStock = settings.enableStock && !settings.allowSaleWhenOutOfStock && (item.stock ?? 0) <= 0;
+          return (
+          <div key={item.id} className={`bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md transition-all ${outOfStock ? 'opacity-50 grayscale' : ''}`}>
             <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
               {item.image ? (
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -286,10 +333,25 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
               <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">{item.category}</div>
               <h3 className="font-bold text-slate-800 text-lg leading-tight">{item.name}</h3>
               <p className="text-blue-600 font-black mt-2 text-xl">{settings.currencySymbol}{item.price.toFixed(2)}</p>
+              {settings.enableStock && (
+                <p className={`mt-1 text-xs font-bold ${(item.stock ?? 0) <= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                  Stock: {item.stock ?? 0}{(item.stock ?? 0) <= 0 ? ' (Out of stock)' : ''}
+                </p>
+              )}
+              {settings.enableBarcode && item.barcode && (
+                <p className="mt-1 text-xs font-medium text-slate-500">Barcode: {item.barcode}</p>
+              )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
+      {showScanner && (
+        <BarcodeScanner
+          onDetected={(code) => { setNewItem(prev => ({ ...prev, barcode: code })); setShowScanner(false); onNotify(`Barcode scanned: ${code}`, 'success'); }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   );
 }

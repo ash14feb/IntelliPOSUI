@@ -11,7 +11,7 @@ interface SettingsViewProps {
   onNotify: (message: string, tone?: 'success' | 'error' | 'info') => void;
 }
 
-type SettingsTab = 'restaurant' | 'business' | 'tax' | 'receipt' | 'printer' | 'order';
+type SettingsTab = 'restaurant' | 'business' | 'tax' | 'receipt' | 'printer' | 'order' | 'inventory';
 
 export default function SettingsView({ settings, setSettings, onSave, isSaving, onMenuClick, onNotify }: SettingsViewProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('restaurant');
@@ -30,6 +30,7 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
     { id: 'tax', label: 'Tax Configuration' },
     { id: 'receipt', label: 'Receipt Settings' },
     { id: 'order', label: 'Order Settings' },
+    { id: 'inventory', label: 'Inventory Settings' },
     { id: 'printer', label: 'Printer Setup' }
   ];
 
@@ -139,6 +140,35 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
               <div>
                 <div className="font-semibold text-slate-800">Print Bill Before Order</div>
                 <div className="text-sm text-slate-500">When enabled, clicking Pay will print the bill first. The order is accepted only after the bill is printed successfully.</div>
+              </div>
+            </label>
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'inventory' && (
+        <section className="bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">Inventory Settings</h2>
+          <div className="space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+              <input type="checkbox" className="h-4 w-4" checked={!!settings.enableBarcode} onChange={e => setSettings({ ...settings, enableBarcode: e.target.checked })} />
+              <div>
+                <div className="font-semibold text-slate-800">Enable Barcode</div>
+                <div className="text-sm text-slate-500">Show barcode field in inventory with camera scanner support.</div>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+              <input type="checkbox" className="h-4 w-4" checked={!!settings.enableStock} onChange={e => setSettings({ ...settings, enableStock: e.target.checked })} />
+              <div>
+                <div className="font-semibold text-slate-800">Enable Stock</div>
+                <div className="text-sm text-slate-500">Track and display stock quantity on inventory and POS items.</div>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+              <input type="checkbox" className="h-4 w-4" checked={!!settings.allowSaleWhenOutOfStock} onChange={e => setSettings({ ...settings, allowSaleWhenOutOfStock: e.target.checked })} />
+              <div>
+                <div className="font-semibold text-slate-800">Allow sale when stock is 0</div>
+                <div className="text-sm text-slate-500">When off, items with 0 stock are greyed out and cannot be added to cart.</div>
               </div>
             </label>
           </div>
