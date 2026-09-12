@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Award, Calendar, ChevronDown, FileText, FolderTree, Key, LayoutDashboard, LoaderCircle, LogOut, Package, Package2, PieChart, Settings as SettingsIcon, ShoppingCart, TrendingUp, Users, X } from 'lucide-react';
+import { Award, Calendar, Armchair, ChefHat, ClipboardList, ChevronDown, FileText, FolderTree, Key, LayoutDashboard, LoaderCircle, LogOut, Package, Package2, PieChart, Settings as SettingsIcon, ShoppingCart, TrendingUp, Users, Wallet, X } from 'lucide-react';
 import { AuthUser, Settings } from '../types';
 import { changePassword } from '../lib/api';
 
@@ -32,7 +32,11 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, us
         ...(isAdmin ? [{ id: 'inventory', label: 'Inventory', icon: Package2 }] : []),
         ...(isAdmin ? [{ id: 'categories', label: 'Categories', icon: FolderTree }] : []),
         ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users }] : []),
-        ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: SettingsIcon }] : [])
+        ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: SettingsIcon }] : []),
+        { id: 'orders', label: 'Orders', icon: ClipboardList },
+        { id: 'customers', label: 'Customers', icon: Users },
+        { id: 'expenses', label: 'Expenses', icon: Wallet },
+        ...((settings as any)?.businessType === 'FOOD' || !(settings as any)?.businessType ? [{ id: 'tables', label: 'Tables', icon: Armchair }, { id: 'kds', label: 'Kitchen', icon: ChefHat }] : [])
       ];
 
   const reportItems = [

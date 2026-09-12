@@ -12,6 +12,11 @@ import DashboardView from './views/DashboardView';
 import AuthView from './views/AuthView';
 import UsersManager from './views/UsersManager';
 import SuperAdminView from './views/SuperAdminView';
+import TablesView from './views/TablesView';
+import KDSView from './views/KDSView';
+import OrdersView from './views/OrdersView';
+import CustomersView from './views/CustomersView';
+import ExpensesView from './views/ExpensesView';
 import { PrinterManager } from './lib/printerManager';
 import {
   createPosCategory,
@@ -48,7 +53,8 @@ const DEFAULT_SETTINGS: Settings = {
   paperWidth: '3inch',
   receiptHeader: 'Welcome to Intelli Billing!',
   receiptFooter: 'Thank you for visiting!',
-  orderAfterBill: false
+  orderAfterBill: false,
+  businessType: 'FOOD'
 };
 
 export default function App() {
@@ -484,6 +490,24 @@ export default function App() {
             onMenuClick={() => setIsSidebarOpen(true)}
             onNotify={notify}
           />
+        )}
+        {!isSuperAdmin && (activeTab === 'tables' || activeTab === 'kds') && (settings as any)?.businessType !== 'FOOD' && (
+          <div className="p-10 text-center text-slate-500 font-semibold">Tables & Kitchen are available only for Food & Restaurant business type. Change it in Settings.</div>
+        )}
+        {!isSuperAdmin && activeTab === 'tables' && (settings as any)?.businessType !== 'FOOD' ? null : !isSuperAdmin && activeTab === 'tables' && (
+          <TablesView onMenuClick={() => setIsSidebarOpen(true)} onNotify={notify} />
+        )}
+        {!isSuperAdmin && activeTab === 'kds' && (settings as any)?.businessType !== 'FOOD' ? null : !isSuperAdmin && activeTab === 'kds' && (
+          <KDSView onMenuClick={() => setIsSidebarOpen(true)} onNotify={notify} />
+        )}
+        {!isSuperAdmin && activeTab === 'orders' && (
+          <OrdersView onMenuClick={() => setIsSidebarOpen(true)} onNotify={notify} />
+        )}
+        {!isSuperAdmin && activeTab === 'customers' && (
+          <CustomersView onMenuClick={() => setIsSidebarOpen(true)} onNotify={notify} />
+        )}
+        {!isSuperAdmin && activeTab === 'expenses' && (
+          <ExpensesView onMenuClick={() => setIsSidebarOpen(true)} onNotify={notify} />
         )}
         {!isSuperAdmin && isAdmin && activeTab === 'settings' && (
           <SettingsView

@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+/.vs/UI/CopilotIndices/17.14.1431.25910
+/.vs/UI/FileContentIndex

@@ -11,7 +11,7 @@ interface SettingsViewProps {
   onNotify: (message: string, tone?: 'success' | 'error' | 'info') => void;
 }
 
-type SettingsTab = 'restaurant' | 'tax' | 'receipt' | 'printer' | 'order';
+type SettingsTab = 'restaurant' | 'business' | 'tax' | 'receipt' | 'printer' | 'order';
 
 export default function SettingsView({ settings, setSettings, onSave, isSaving, onMenuClick, onNotify }: SettingsViewProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('restaurant');
@@ -26,6 +26,7 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
 
   const tabs: { id: SettingsTab; label: string }[] = [
     { id: 'restaurant', label: 'Store Details' },
+    { id: 'business', label: 'Business Type' },
     { id: 'tax', label: 'Tax Configuration' },
     { id: 'receipt', label: 'Receipt Settings' },
     { id: 'order', label: 'Order Settings' },
@@ -65,6 +66,18 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
               <label className="block text-sm font-semibold text-slate-700 mb-2">Currency Symbol</label>
               <input type="text" name="currencySymbol" value={settings.currencySymbol} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" placeholder="e.g. Rs., $, EUR" />
             </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'business' && (
+        <section className="bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-800 mb-2">What type of business do you run?</h2>
+          <p className="text-sm text-slate-500 mb-6">If Food is selected, KOT and Tables come into picture.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[['FOOD', 'Food & Restaurant'], ['RETAIL', 'Retail / Non-Food'], ['SERVICES', 'Services'], ['GENERAL', 'General / Other']].map(([val, label]: string[]) => (
+              <button key={val} onClick={() => setSettings({ ...settings, businessType: val as any })} className={"p-4 rounded-2xl border text-left font-semibold " + (settings.businessType === val ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-slate-50 text-slate-700")}>{label}</button>
+            ))}
           </div>
         </section>
       )}

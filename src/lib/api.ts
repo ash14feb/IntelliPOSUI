@@ -65,7 +65,7 @@ export function persistSession(session: AuthSession | null) {
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers || {});
 
   if (!headers.has('Content-Type') && init?.body) {
@@ -267,3 +267,20 @@ export async function resetPassword(payload: ResetPasswordPayload): Promise<stri
   });
   return response.message;
 }
+
+
+export async function fetchTables(): Promise<any[]> {
+  const r = await request<{ success: boolean; data: any[] }>('/api/tables');
+  return r.data;
+}
+export async function createTable(payload: any): Promise<void> { await request('/api/tables', { method: 'POST', body: JSON.stringify(payload) }); }
+export async function updateTableStatus(id: number, status: string, orderCode?: string): Promise<void> { await request('/api/tables/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status, current_order_code: orderCode || null }) }); }
+export async function fetchFloors(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/tables/floors'); return r.data; }
+export async function createFloor(name: string): Promise<void> { await request('/api/tables/floors', { method: 'POST', body: JSON.stringify({ name }) }); }
+export async function fetchCustomers(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/customers'); return r.data; }
+export async function createCustomer(payload: any): Promise<void> { await request('/api/customers', { method: 'POST', body: JSON.stringify(payload) }); }
+export async function fetchKot(status?: string): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/kot' + (status ? '?status=' + status : '')); return r.data; }
+export async function createKot(payload: any): Promise<void> { await request('/api/kot', { method: 'POST', body: JSON.stringify(payload) }); }
+export async function updateKotStatus(id: number, status: string): Promise<void> { await request('/api/kot/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status }) }); }
+export async function fetchDineOrders(status?: string): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/dineorders' + (status ? '?status=' + status : '')); return r.data; }
+export async function updateDineOrderStatus(code: string, status: string): Promise<void> { await request('/api/dineorders/' + code + '/status', { method: 'PUT', body: JSON.stringify({ status }) }); }
