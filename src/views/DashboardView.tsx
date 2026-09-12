@@ -56,6 +56,25 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
   }, [filteredOrders]);
 
   const maxCustomers = Math.max(...hourlyData.map(item => item.customers), 1);
+
+  // SVG line-chart geometry: x = time, y = customers.
+  const chartW = 900;
+  const chartH = 260;
+  const padL = 44;
+  const padR = 16;
+  const padT = 16;
+  const padB = 34;
+  const innerW = chartW - padL - padR;
+  const innerH = chartH - padT - padB;
+  const yMax = Math.max(maxCustomers, 1);
+  const points = hourlyData.map((item, i) => {
+    const x = hourlyData.length === 1 ? padL : padL + (i / (hourlyData.length - 1)) * innerW;
+    const y = padT + innerH - (item.customers / yMax) * innerH;
+    return { ...item, x, y };
+  });
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1].x.toFixed(1)},${(padT + innerH).toFixed(1)} L${points[0].x.toFixed(1)},${(padT + innerH).toFixed(1)} Z`;
+  const yTicks = [0, 0.5, 1].map(f => ({ value: Math.round(yMax * f), y: padT + innerH - f * innerH }));
   const recentSales = [...filteredOrders].reverse().slice(0, 8);
 
   const cards = [
@@ -167,23 +186,39 @@ export default function DashboardView({ orders, settings, canDeleteSales = false
             <BarChart3 className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800">Customer Flow By Hour</h2>
-            <p className="text-sm text-slate-500">10 AM to 11 PM</p>
+            <h2 className="text-xl font-bold text-slate-800">Customer Flow</h2>
+            <p className="text-sm text-slate-500">Customers over time (10 AM to 11 PM)</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-7 xl:grid-cols-14 gap-4 items-end min-h-72">
-          {hourlyData.map(item => (
-            <div key={item.hour} className="flex flex-col items-center gap-3">
-              <div className="w-full bg-slate-100 rounded-t-2xl rounded-b-md relative h-48 flex items-end overflow-hidden">
-                <div
-                  className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-2xl transition-all"
-                  style={{ height: `${(item.customers / maxCustomers) * 100}%` }}
-                />
-                <span className="absolute top-3 inset-x-0 text-center text-xs font-bold text-slate-700">{item.customers}</span>
-              </div>
-              <span className="text-xs font-semibold text-slate-500">{item.label}</span>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full min-w-[640px]" role="img" aria-label="Customer flow over time">
+            <defs>
+              <linearGradient id="flowArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            {yTicks.map(tick => (
+              <g key={tick.value}>
+                <line x1={padL} y1={tick.y} x2={chartW - padR} y2={tick.y} stroke="#E2E8F0" strokeDasharray="4 4" />
+                <text x={padL - 8} y={tick.y + 4} textAnchor="end" fontSize="12" fill="#64748B" fontWeight="600">{tick.value}</text>
+              </g>
+            ))}
+            <line x1={padL} y1={padT + innerH} x2={chartW - padR} y2={padT + innerH} stroke="#CBD5E1" />
+            <text x={12} y={padT + 8} fontSize="12" fill="#64748B" fontWeight="700">Customers</text>
+            <path d={areaPath} fill="url(#flowArea)" />
+            <path d={linePath} fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            {points.map(p => (
+              <g key={p.hour}>
+                <circle cx={p.x} cy={p.y} r="4.5" fill="#2563EB" stroke="#fff" strokeWidth="2" />
+                <text x={p.x} y={p.y - 10} textAnchor="middle" fontSize="11" fill="#334155" fontWeight="700">{p.customers}</text>
+                {(p.hour === 10 || p.hour % 2 === 0) && (
+                  <text x={p.x} y={chartH - 8} textAnchor="middle" fontSize="11" fill="#64748B" fontWeight="600">{p.label}</text>
+                )}
+              </g>
+            ))}
+            <text x={chartW - padR} y={chartH - 8} textAnchor="end" fontSize="12" fill="#64748B" fontWeight="700">Time →</text>
+          </svg>
         </div>
       </div>
     </div>

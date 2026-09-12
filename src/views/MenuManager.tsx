@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Category, MenuItem, Settings } from '../types';
-import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil, ScanLine, Package, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Menu, Upload, LoaderCircle, Pencil, ScanLine, Package, ArrowLeft, Camera } from 'lucide-react';
 import { uploadToImgBB, UploadStatus } from '../lib/imgbb';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { formatPrice } from '../lib/currency';
@@ -286,16 +286,28 @@ export default function MenuManager({ menuItems, categories, onAddItem, onUpdate
           )}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Item Image</label>
-            <label className="flex items-center gap-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-white transition-all font-medium text-slate-700">
-              {isSaving && uploadStatus?.step === 'uploading' ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              <span className="truncate">{newItem.image ? 'Image uploaded' : 'Upload image'}</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => handleFileUpload(e.target.files?.[0])}
-              />
-            </label>
+            <div className="flex gap-2">
+              <label className="flex flex-1 items-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-white transition-all font-medium text-slate-700">
+                {isSaving && uploadStatus?.step === 'uploading' ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                <span className="truncate">{newItem.image ? 'Image uploaded' : 'Upload image'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => handleFileUpload(e.target.files?.[0])}
+                />
+              </label>
+              <label title="Take photo with camera" className="flex items-center justify-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-white transition-all text-slate-700">
+                <Camera className="w-4 h-4" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={e => handleFileUpload(e.target.files?.[0])}
+                />
+              </label>
+            </div>
             {uploadStatus && (
               <p className={`mt-2 text-xs font-medium ${uploadStatus.step === 'error' ? 'text-red-500' : 'text-slate-500'}`}>
                 {uploadStatus.message}

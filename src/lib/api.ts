@@ -275,6 +275,20 @@ export async function fetchTables(): Promise<any[]> {
 }
 export async function createTable(payload: any): Promise<void> { await request('/api/tables', { method: 'POST', body: JSON.stringify(payload) }); }
 export async function updateTableStatus(id: number, status: string, orderCode?: string): Promise<void> { await request('/api/tables/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status, current_order_code: orderCode || null }) }); }
+export async function deleteTable(id: number): Promise<void> { await request('/api/tables/' + id, { method: 'DELETE' }); }
+export interface PublicMenuData {
+  table: { table_no: string; seats: number };
+  restaurantName: string;
+  currencySymbol: string;
+  menuItems: MenuItem[];
+}
+export async function fetchPublicMenu(code: string): Promise<PublicMenuData> {
+  const base = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
+  const response = await fetch(`${base}/api/tables/menu/${encodeURIComponent(code)}`);
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(payload?.message || 'Unable to load menu');
+  return payload.data as PublicMenuData;
+}
 export async function fetchFloors(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/tables/floors'); return r.data; }
 export async function createFloor(name: string): Promise<void> { await request('/api/tables/floors', { method: 'POST', body: JSON.stringify({ name }) }); }
 export async function fetchCustomers(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/customers'); return r.data; }

@@ -14,6 +14,7 @@ import AuthView from './views/AuthView';
 import UsersManager from './views/UsersManager';
 import SuperAdminView from './views/SuperAdminView';
 import TablesView from './views/TablesView';
+import PublicMenuView from './views/PublicMenuView';
 import KDSView from './views/KDSView';
 import OrdersView from './views/OrdersView';
 import CustomersView from './views/CustomersView';
@@ -99,6 +100,21 @@ export default function App() {
     setNotification({ message, tone });
   };
 
+  // Public table menu links: #/menu/<code> renders without login.
+  const [menuCode, setMenuCode] = useState<string | null>(() => {
+    const m = window.location.hash.match(/^#\/menu\/([A-Za-z0-9]+)/);
+    return m ? m[1] : null;
+  });
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const m = window.location.hash.match(/^#\/menu\/([A-Za-z0-9]+)/);
+      setMenuCode(m ? m[1] : null);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   useEffect(() => {
     printer.syncSettings(settings);
   }, [printer, settings]);
@@ -119,7 +135,11 @@ export default function App() {
     let isMounted = true;
 
     const bootstrapAuthenticatedUser = async () => {
-      if (!session) {
+  if (menuCode) {
+    return <PublicMenuView code={menuCode} />;
+  }
+
+  if (!session) {
         if (isMounted) {
           setIsLoading(false);
           setLoadError(null);

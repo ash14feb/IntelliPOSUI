@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings } from '../types';
-import { LoaderCircle, Menu } from 'lucide-react';
+import { LoaderCircle, Menu, ChevronRight, ArrowLeft, Store, Briefcase, Percent, ReceiptText, ShoppingCart, Boxes, Printer } from 'lucide-react';
 
 interface SettingsViewProps {
   settings: Settings;
@@ -14,7 +14,7 @@ interface SettingsViewProps {
 type SettingsTab = 'restaurant' | 'business' | 'tax' | 'receipt' | 'printer' | 'order' | 'inventory';
 
 export default function SettingsView({ settings, setSettings, onSave, isSaving, onMenuClick, onNotify }: SettingsViewProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('restaurant');
+  const [activeTab, setActiveTab] = useState<SettingsTab | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -24,15 +24,36 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
     });
   };
 
-  const tabs: { id: SettingsTab; label: string }[] = [
-    { id: 'restaurant', label: 'Store Details' },
-    { id: 'business', label: 'Business Type' },
-    { id: 'tax', label: 'Tax Configuration' },
-    { id: 'receipt', label: 'Receipt Settings' },
-    { id: 'order', label: 'Order Settings' },
-    { id: 'inventory', label: 'Inventory Settings' },
-    { id: 'printer', label: 'Printer Setup' }
+  const tabs: { id: SettingsTab; label: string; desc: string; icon: any }[] = [
+    { id: 'restaurant', label: 'Store Details', desc: 'Store name and currency', icon: Store },
+    { id: 'business', label: 'Business Type', desc: 'Food, retail, services or general', icon: Briefcase },
+    { id: 'tax', label: 'Tax Configuration', desc: 'CGST, SGST and tax mode', icon: Percent },
+    { id: 'receipt', label: 'Receipt Settings', desc: 'Header, footer and KOT', icon: ReceiptText },
+    { id: 'order', label: 'Order Settings', desc: 'Bill-before-order flow', icon: ShoppingCart },
+    { id: 'inventory', label: 'Inventory Settings', desc: 'Barcode, stock and sale rules', icon: Boxes },
+    { id: 'printer', label: 'Printer Setup', desc: 'Connection and paper width', icon: Printer }
   ];
+
+  const handleSave = async () => {
+    try {
+      await onSave(settings);
+      onNotify('Settings saved successfully', 'success');
+    } catch (error: any) {
+      onNotify(error.message || 'Unable to save settings', 'error');
+    }
+  };
+
+  const saveButton = (
+    <div className="flex justify-end mt-8">
+      <button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+      >
+        {isSaving ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Settings'}
+      </button>
+    </div>
+  );
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl mx-auto h-full overflow-y-auto">
@@ -43,17 +64,39 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
         <h1 className="text-3xl font-bold text-slate-800 tracking-tight">System Settings</h1>
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-8">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-full font-semibold ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {activeTab === null && (
+        <div className="space-y-3 pb-20">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="w-full flex items-center gap-4 bg-white p-4 lg:p-5 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-300 hover:shadow-md transition-all text-left"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-slate-800">{tab.label}</div>
+                  <div className="text-sm text-slate-500 truncate">{tab.desc}</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {activeTab !== null && (
+        <button
+          onClick={() => setActiveTab(null)}
+          className="mb-6 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to settings
+        </button>
+      )}
 
       {activeTab === 'restaurant' && (
         <section className="bg-white p-6 lg:p-8 rounded-3xl shadow-sm border border-slate-100">
@@ -202,22 +245,7 @@ export default function SettingsView({ settings, setSettings, onSave, isSaving, 
         </section>
       )}
 
-      <div className="flex justify-end mt-8">
-        <button
-          onClick={async () => {
-            try {
-              await onSave(settings);
-              onNotify('Settings saved successfully', 'success');
-            } catch (error: any) {
-              onNotify(error.message || 'Unable to save settings', 'error');
-            }
-          }}
-          disabled={isSaving}
-          className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-        >
-          {isSaving ? <><LoaderCircle className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Settings'}
-        </button>
-      </div>
+      {activeTab !== null && saveButton}
     </div>
   );
 }
