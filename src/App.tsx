@@ -135,11 +135,7 @@ export default function App() {
     let isMounted = true;
 
     const bootstrapAuthenticatedUser = async () => {
-  if (menuCode) {
-    return <PublicMenuView code={menuCode} />;
-  }
-
-  if (!session) {
+      if (!session) {
         if (isMounted) {
           setIsLoading(false);
           setLoadError(null);
@@ -406,6 +402,11 @@ export default function App() {
     await deleteStoreUser(id);
     setStoreUsers((prev) => prev.filter((user) => user.user_id !== id));
   };
+
+  // Public table menu links: #/menu/<code> renders without login.
+  if (menuCode) {
+    return <PublicMenuView code={menuCode} />;
+  }
 
   if (!session) {
     return (
