@@ -18,7 +18,7 @@ import {
 } from '../types';
 
 const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
-const API_BASE_URL = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
+export const API_BASE_URL = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
 const AUTH_STORAGE_KEY = 'scannex-pos-auth';
 
 let authToken: string | null = null;
@@ -283,11 +283,13 @@ export interface PublicMenuData {
   menuItems: MenuItem[];
 }
 export async function fetchPublicMenu(code: string, timeoutMs = 20000): Promise<PublicMenuData> {
-  const base = (env?.VITE_API_BASE_URL || 'https://intelli-posapi.vercel.app').replace(/\/$/, '');
+  const base = API_BASE_URL;
+  const url = `${base}/api/tables/menu/${encodeURIComponent(code)}`;
+  console.info('[menu] loading', url);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(`${base}/api/tables/menu/${encodeURIComponent(code)}`, {
+    const response = await fetch(url, {
       signal: controller.signal,
       cache: 'no-store'
     });

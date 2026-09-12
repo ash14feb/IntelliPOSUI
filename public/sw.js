@@ -1,5 +1,5 @@
 // Intelli Billing POS service worker: offline shell + installability.
-const CACHE_NAME = 'intellibilling-v4';
+const CACHE_NAME = 'intellibilling-v5';
 const OFFLINE_SHELL = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', event => {

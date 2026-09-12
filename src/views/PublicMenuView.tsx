@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LoaderCircle, UtensilsCrossed, Search } from 'lucide-react';
-import { fetchPublicMenu, PublicMenuData } from '../lib/api';
+import { fetchPublicMenu, PublicMenuData, API_BASE_URL } from '../lib/api';
 import { formatPrice } from '../lib/currency';
 
 export default function PublicMenuView({ code }: { code: string }) {
@@ -59,6 +59,7 @@ export default function PublicMenuView({ code }: { code: string }) {
         <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center"><UtensilsCrossed className="w-8 h-8" /></div>
         <p className="font-bold text-slate-800 text-lg">Menu link not found</p>
         <p className="text-sm text-slate-500 max-w-sm">{error || 'Please ask the staff for a valid QR code or link.'}</p>
+        <p className="text-[11px] text-slate-400 font-mono break-all">code: {code} · api: {API_BASE_URL}</p>
         <button
           onClick={() => setAttempt(a => a + 1)}
           className="mt-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
