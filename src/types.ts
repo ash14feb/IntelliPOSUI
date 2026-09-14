@@ -16,8 +16,7 @@ export interface Settings {
   allowSaleWhenOutOfStock: boolean;
 }
 
-export interface Floor { id: number; name: string; sort_order?: number; }
-export interface RestaurantTable { id: number; floor_id?: number | null; floor_name?: string; table_no: string; seats: number; status: 'FREE' | 'OCCUPIED' | 'RESERVED' | 'BILLED'; current_order_code?: string | null; }
+export interface RestaurantTable { id: number; table_no: string; seats: number; status: 'FREE' | 'OCCUPIED' | 'RESERVED' | 'BILLED'; current_order_code?: string | null; }
 export interface Customer { id: number; name: string; phone?: string; email?: string; loyalty_points: number; total_orders: number; total_spent: number; }
 export interface KotTicket { id: number; order_code: string; table_id?: number | null; status: string; items: { item_name: string; quantity: number }[]; created_at?: string; }
 
@@ -144,3 +143,4 @@ export interface ResetPasswordPayload {
   token: string;
   newPassword: string;
 }
+

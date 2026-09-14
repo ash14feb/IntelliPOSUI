@@ -304,8 +304,6 @@ export async function fetchPublicMenu(code: string, timeoutMs = 20000): Promise<
     clearTimeout(timer);
   }
 }
-export async function fetchFloors(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/tables/floors'); return r.data; }
-export async function createFloor(name: string): Promise<void> { await request('/api/tables/floors', { method: 'POST', body: JSON.stringify({ name }) }); }
 export async function fetchCustomers(): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/customers'); return r.data; }
 export async function createCustomer(payload: any): Promise<void> { await request('/api/customers', { method: 'POST', body: JSON.stringify(payload) }); }
 export async function fetchKot(status?: string): Promise<any[]> { const r = await request<{ success: boolean; data: any[] }>('/api/kot' + (status ? '?status=' + status : '')); return r.data; }
